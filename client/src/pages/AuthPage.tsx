@@ -1,67 +1,14 @@
-import React from 'react';
-import { useState } from "react";
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router";
 import { Eye, EyeOff, Trophy, ChevronRight, Clock, Zap } from "lucide-react";
 
-type Screen = "landing" | "login" | "register";
+// Import unified authApi alongside matching structural data types
+import { authApi, Match, LeaderboardUser } from "../api/index";
 
-const MATCHES = [
-  {
-    id: 1,
-    home: "Arsenal",
-    homeShort: "ARS",
-    away: "Man City",
-    awayShort: "MCI",
-    homeCrest: "🔴",
-    awayCrest: "🔵",
-    date: "Sat 5 Jul",
-    time: "12:30",
-    venue: "Emirates Stadium",
-    homeOdds: "2.40",
-    drawOdds: "3.20",
-    awayOdds: "2.90",
-  },
-  {
-    id: 2,
-    home: "Liverpool",
-    homeShort: "LIV",
-    away: "Chelsea",
-    awayShort: "CHE",
-    homeCrest: "🔴",
-    awayCrest: "🔵",
-    date: "Sat 5 Jul",
-    time: "15:00",
-    venue: "Anfield",
-    homeOdds: "1.90",
-    drawOdds: "3.50",
-    awayOdds: "3.80",
-  },
-  {
-    id: 3,
-    home: "Tottenham",
-    homeShort: "TOT",
-    away: "Man Utd",
-    awayShort: "MUN",
-    homeCrest: "⚪",
-    awayCrest: "🔴",
-    date: "Sun 6 Jul",
-    time: "16:30",
-    venue: "Tottenham Hotspur Stadium",
-    homeOdds: "2.10",
-    drawOdds: "3.30",
-    awayOdds: "3.40",
-  },
-];
-
-const LEADERBOARD = [
-  { rank: 1, name: "xavi_prophet", pts: 3842, accuracy: "71%" },
-  { rank: 2, name: "gunner_oracle", pts: 3710, accuracy: "68%" },
-  { rank: 3, name: "redzone_jamie", pts: 3588, accuracy: "66%" },
-  { rank: 4, name: "pitch_vision", pts: 3401, accuracy: "64%" },
-  { rank: 5, name: "klopp_disciple", pts: 3290, accuracy: "63%" },
-];
+type Screen = "landing" | "login" | "register" | "verify";
 
 function NavBar({ screen, setScreen }: { screen: Screen; setScreen: (s: Screen) => void }) {
+  const showBack = screen === "login" || screen === "register" || screen === "verify";
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 h-14 border-b border-border bg-background/90 backdrop-blur-sm">
       <div className="flex items-center gap-2">
@@ -91,7 +38,7 @@ function NavBar({ screen, setScreen }: { screen: Screen; setScreen: (s: Screen) 
           </button>
         </div>
       )}
-      {(screen === "login" || screen === "register") && (
+      {showBack && (
         <button
           onClick={() => setScreen("landing")}
           className="text-xs tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
@@ -104,8 +51,18 @@ function NavBar({ screen, setScreen }: { screen: Screen; setScreen: (s: Screen) 
   );
 }
 
-function MatchCard({ match }: { match: typeof MATCHES[0] }) {
+function MatchCard({ match }: { match: Match }) {
   const [prediction, setPrediction] = useState<"home" | "draw" | "away" | null>(null);
+
+  const handlePrediction = async (type: "home" | "draw" | "away") => {
+    const nextPrediction = prediction === type ? null : type;
+    setPrediction(nextPrediction);
+
+    if (nextPrediction) {
+      console.log(`Live Event: Saved user prediction "${nextPrediction}" for Match ID ${match.id}`);
+    }
+  };
+
   return (
     <div className="bg-card border border-border flex flex-col gap-0 overflow-hidden group hover:border-primary/30 transition-colors duration-200">
       <div className="px-4 py-2.5 flex items-center justify-between border-b border-border bg-muted/30">
@@ -148,7 +105,7 @@ function MatchCard({ match }: { match: typeof MATCHES[0] }) {
           const odds = type === "home" ? match.homeOdds : type === "away" ? match.awayOdds : match.drawOdds;
           const active = prediction === type;
           return (
-            <button key={type} onClick={() => setPrediction(active ? null : type)}
+            <button key={type} onClick={() => handlePrediction(type)}
               className={`flex flex-col items-center py-2 border text-xs transition-all duration-150 ${active ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"}`}>
               <span className="text-[10px] tracking-widest font-semibold uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{label}</span>
               <span className="text-sm font-bold mt-0.5" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>{odds}</span>
@@ -160,7 +117,7 @@ function MatchCard({ match }: { match: typeof MATCHES[0] }) {
   );
 }
 
-function LeaderboardWidget({ setScreen }: { setScreen: (s: Screen) => void }) {
+function LeaderboardWidget({ leaderboard, setScreen }: { leaderboard: LeaderboardUser[]; setScreen: (s: Screen) => void }) {
   return (
     <div className="bg-card border border-border overflow-hidden">
       <div className="px-5 py-3 flex items-center justify-between border-b border-border">
@@ -173,7 +130,7 @@ function LeaderboardWidget({ setScreen }: { setScreen: (s: Screen) => void }) {
         </button>
       </div>
       <div className="divide-y divide-border">
-        {LEADERBOARD.map((user) => (
+        {leaderboard.map((user) => (
           <div key={user.rank} className="px-5 py-2.5 flex items-center gap-3">
             <span className={`text-xs font-bold w-5 text-center flex-shrink-0 ${user.rank === 1 ? "text-primary" : "text-muted-foreground"}`} style={{ fontFamily: "'JetBrains Mono', monospace" }}>
               {user.rank === 1 ? "01" : `0${user.rank}`}
@@ -195,7 +152,7 @@ function LeaderboardWidget({ setScreen }: { setScreen: (s: Screen) => void }) {
   );
 }
 
-function LandingScreen({ setScreen }: { setScreen: (s: Screen) => void }) {
+function LandingScreen({ matches, leaderboard, setScreen }: { matches: Match[]; leaderboard: LeaderboardUser[]; setScreen: (s: Screen) => void }) {
   return (
     <main className="min-h-screen pt-14 bg-background">
       <section className="relative overflow-hidden border-b border-border">
@@ -220,6 +177,25 @@ function LandingScreen({ setScreen }: { setScreen: (s: Screen) => void }) {
             <button onClick={() => setScreen("login")} className="px-7 py-3.5 border border-border text-foreground font-bold tracking-widest uppercase text-sm hover:border-primary/40 transition-colors" style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.15em" }}>
               Log In
             </button>
+
+            {/*******************************************************************************
+             * 🚨 REMOVE BEFORE PRODUCTION / DEPLOYMENT 🚨
+             * DEVELOPMENT BYPASS QUICK ACCESS BUTTON
+             ******************************************************************************/}
+            {((import.meta as any).env?.DEV) && (
+              <button 
+                onClick={() => {
+                  localStorage.setItem("auth_token", "dev_bypass_mock_token");
+                  window.location.href = "/dashboard";
+                }} 
+                className="px-5 py-3.5 bg-yellow-500/10 border border-yellow-500/30 text-yellow-500 text-xs font-bold tracking-widest uppercase hover:bg-yellow-500/20 transition-all active:scale-[0.99]"
+                style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}
+              >
+                ⚡ Dev Bypass (Skip Login)
+              </button>
+            )}
+            {/******************************************************************************/}
+
           </div>
           <div className="mt-10 flex items-center gap-6 flex-wrap">
             {[["48K+", "Active Predictors"], ["£10K", "Monthly Prize Pool"], ["380", "Fixtures / Season"]].map(([num, label]) => (
@@ -237,18 +213,24 @@ function LandingScreen({ setScreen }: { setScreen: (s: Screen) => void }) {
             <div className="w-1 h-5 bg-primary" />
             <h2 className="text-xl font-bold tracking-widest uppercase text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}>Upcoming Fixtures</h2>
           </div>
-          <span className="text-[10px] tracking-widest text-muted-foreground uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>GW38 · Preview Mode</span>
+          <span className="text-[10px] tracking-widest text-muted-foreground uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>GW38 · Live Feed</span>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
-          {MATCHES.map((m) => <MatchCard key={m.id} match={m} />)}
-        </div>
+        
+        {matches.length === 0 ? (
+          <div className="py-10 text-center text-xs text-muted-foreground animate-pulse font-mono uppercase">Syncing Live Fixtures...</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
+            {matches.map((m) => <MatchCard key={m.id} match={m} />)}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-1">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-1 h-5 bg-primary" />
               <h2 className="text-xl font-bold tracking-widest uppercase text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}>Leaderboard</h2>
             </div>
-            <LeaderboardWidget setScreen={setScreen} />
+            <LeaderboardWidget leaderboard={leaderboard} setScreen={setScreen} />
           </div>
           <div className="md:col-span-2 flex flex-col justify-between bg-card border border-border p-6 md:p-8">
             <div>
@@ -299,14 +281,33 @@ function AuthField({ label, type, placeholder, value, onChange, showToggle }: {
   );
 }
 
-function LoginScreen({ setScreen }: { setScreen: (s: Screen) => void }) {
-  const [email, setEmail] = useState("");
+function LoginScreen({ leaderboard, setScreen }: { leaderboard: LeaderboardUser[]; setScreen: (s: Screen) => void }) {
+  const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const topUser = leaderboard[0];
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/dashboard");
+    setLoading(true);
+    setError("");
+    
+    try {
+      const data = await authApi.login({ identity: emailOrUsername, password });
+
+      if (data.token) {
+        localStorage.setItem("auth_token", data.token);
+      }
+      navigate("/dashboard");
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Login connection context failed.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -320,41 +321,78 @@ function LoginScreen({ setScreen }: { setScreen: (s: Screen) => void }) {
           <p className="text-sm text-muted-foreground leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>Log in to your account and get back to predicting.</p>
         </div>
         <form className="flex flex-col gap-4" onSubmit={handleLogin}>
-          <AuthField label="Email Address" type="email" placeholder="you@example.com" value={email} onChange={setEmail} />
-          <AuthField label="Password" type="password" placeholder="••••••••" value={password} onChange={setPassword} showToggle />
+          <AuthField 
+            label="Email or Username" 
+            type="text" 
+            placeholder="you@example.com or username" 
+            value={emailOrUsername} 
+            onChange={setEmailOrUsername} 
+          />
+          <AuthField 
+            label="Password" 
+            type="password" 
+            placeholder="••••••••" 
+            value={password} 
+            onChange={setPassword} 
+            showToggle 
+          />
+          {error && <span className="text-[10px] text-destructive font-mono uppercase tracking-wider">{error}</span>}
           <div className="flex justify-end mt-1">
             <button type="button" className="text-xs text-primary hover:opacity-80 transition-opacity" style={{ fontFamily: "'DM Sans', sans-serif" }}>Forgot Password?</button>
           </div>
-          <button type="submit" className="mt-2 w-full py-3.5 bg-primary text-primary-foreground font-bold tracking-widest uppercase text-sm hover:opacity-90 transition-opacity active:scale-[0.99]" style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.15em" }}>Log In</button>
+          <button type="submit" disabled={loading} className="mt-2 w-full py-3.5 bg-primary text-primary-foreground font-bold tracking-widest uppercase text-sm hover:opacity-90 transition-opacity active:scale-[0.99] disabled:opacity-50">
+            {loading ? "Verifying..." : "Log In"}
+          </button>
         </form>
         <div className="mt-8 pt-6 border-t border-border text-center">
           <span className="text-sm text-muted-foreground" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>No account yet? </span>
           <button onClick={() => setScreen("register")} className="text-sm text-primary hover:opacity-80 transition-opacity font-medium" style={{ fontFamily: "'DM Sans', sans-serif" }}>Sign up for free</button>
         </div>
-        <div className="mt-6 p-4 bg-card border border-border">
-          <div className="flex items-center gap-2 mb-2">
-            <Trophy size={11} className="text-primary" />
-            <span className="text-[10px] tracking-widest text-primary uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Current leader</span>
+        
+        {topUser && (
+          <div className="mt-6 p-4 bg-card border border-border">
+            <div className="flex items-center gap-2 mb-2">
+              <Trophy size={11} className="text-primary" />
+              <span className="text-[10px] tracking-widest text-primary uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Current leader</span>
+            </div>
+            <div className="text-sm text-foreground font-semibold" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+              {topUser.name} <span className="text-muted-foreground font-normal">· {topUser.pts.toLocaleString()} pts · {topUser.accuracy} accuracy</span>
+            </div>
           </div>
-          <div className="text-sm text-foreground font-semibold" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-            xavi_prophet <span className="text-muted-foreground font-normal">· 3,842 pts · 71% accuracy</span>
-          </div>
-        </div>
+        )}
       </div>
     </main>
   );
 }
 
-function RegisterScreen({ setScreen }: { setScreen: (s: Screen) => void }) {
+function RegisterScreen({ setScreen, onRegister }: { setScreen: (s: Screen) => void; onRegister: (email: string) => void }) {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const passwordMatch = confirm === "" || password === confirm;
-  const navigate = useNavigate();
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (passwordMatch && password !== "" && email !== "") navigate("/dashboard");
+    setError("");
+    if (!passwordMatch || password === "" || email === "" || username === "" || firstName === "" || lastName === "") return;
+
+    setLoading(true);
+    try {
+      await authApi.register({ firstName, lastName, username, email, password });
+
+      onRegister(email);
+      setScreen("verify");
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Could not register new member session profile.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -368,6 +406,11 @@ function RegisterScreen({ setScreen }: { setScreen: (s: Screen) => void }) {
           <p className="text-sm text-muted-foreground leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>Join 48,000+ predictors competing for leaderboard glory this season.</p>
         </div>
         <form className="flex flex-col gap-4" onSubmit={handleRegister}>
+          <div className="grid grid-cols-2 gap-3">
+            <AuthField label="First Name" type="text" placeholder="John" value={firstName} onChange={setFirstName} />
+            <AuthField label="Last Name" type="text" placeholder="Doe" value={lastName} onChange={setLastName} />
+          </div>
+          <AuthField label="Username" type="text" placeholder="john_doe" value={username} onChange={setUsername} />
           <AuthField label="Email Address" type="email" placeholder="you@example.com" value={email} onChange={setEmail} />
           <AuthField label="Password" type="password" placeholder="min. 8 characters" value={password} onChange={setPassword} showToggle />
           <div className="flex flex-col gap-1.5">
@@ -380,6 +423,7 @@ function RegisterScreen({ setScreen }: { setScreen: (s: Screen) => void }) {
             </div>
             {!passwordMatch && <span className="text-[10px] text-destructive tracking-wider" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Passwords do not match</span>}
           </div>
+          {error && <span className="text-[10px] text-destructive font-mono uppercase tracking-wider">{error}</span>}
           <div className="mt-1 flex flex-col gap-2">
             <div className="flex items-start gap-2.5">
               <div className="w-3.5 h-3.5 mt-0.5 border border-border flex-shrink-0" />
@@ -388,9 +432,11 @@ function RegisterScreen({ setScreen }: { setScreen: (s: Screen) => void }) {
               </span>
             </div>
           </div>
-          <button type="submit" disabled={!passwordMatch || password === "" || email === ""}
+          <button type="submit" disabled={!passwordMatch || password === "" || email === "" || username === "" || firstName === "" || lastName === "" || loading}
             className="mt-2 w-full py-3.5 bg-primary text-primary-foreground font-bold tracking-widest uppercase text-sm hover:opacity-90 transition-opacity active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.15em" }}>Create Account</button>
+            style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.15em" }}>
+            {loading ? "Creating Profile..." : "Create Account"}
+          </button>
         </form>
         <div className="mt-8 pt-6 border-t border-border text-center">
           <span className="text-sm text-muted-foreground" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>Already have an account? </span>
@@ -409,14 +455,130 @@ function RegisterScreen({ setScreen }: { setScreen: (s: Screen) => void }) {
   );
 }
 
+function VerifyScreen({ email, setScreen }: { email: string; setScreen: (s: Screen) => void }) {
+  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (code.length !== 6) {
+      setError("Please enter a 6-digit code.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const data = await authApi.verifyEmail({ email, code });
+
+      if (data.token) {
+        localStorage.setItem("auth_token", data.token);
+      }
+      navigate("/dashboard");
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Verification failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    try {
+      await authApi.resendCode(email);
+      alert("A new verification code context has been sent to your inbox.");
+    } catch (err) {
+      console.error("Resend error context:", err);
+    }
+  };
+
+  return (
+    <main className="min-h-screen pt-14 bg-background flex items-center justify-center px-4">
+      <div className="w-full max-w-sm">
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-6">
+            <div className="w-1 h-6 bg-primary" />
+            <span className="text-2xl font-black tracking-widest uppercase text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}>Verify Your Email</span>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
+            We sent a 6‑digit code to <strong className="text-foreground">{email || "your email"}</strong>. Enter it below to activate your account.
+          </p>
+        </div>
+        <form className="flex flex-col gap-4" onSubmit={handleVerify}>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] tracking-widest uppercase text-muted-foreground font-semibold" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Verification Code</label>
+            <input
+              type="text"
+              maxLength={6}
+              placeholder="e.g. 123456"
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              className="w-full bg-muted border border-border px-4 py-3 text-foreground text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/20 transition-all text-center tracking-widest font-mono"
+              style={{ fontFamily: "'JetBrains Mono', monospace" }}
+            />
+            {error && <span className="text-[10px] text-destructive tracking-wider">{error}</span>}
+          </div>
+          <button type="submit" disabled={loading || code.length !== 6} className="mt-2 w-full py-3.5 bg-primary text-primary-foreground font-bold tracking-widest uppercase text-sm hover:opacity-90 transition-opacity active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed">
+            {loading ? "Verifying..." : "Verify Email"}
+          </button>
+        </form>
+        <div className="mt-6 text-center">
+          <button onClick={handleResend} className="text-xs text-primary hover:opacity-80 transition-opacity" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+            Resend Code
+          </button>
+        </div>
+        <div className="mt-8 pt-6 border-t border-border text-center">
+          <button onClick={() => setScreen("login")} className="text-sm text-muted-foreground hover:text-foreground transition-colors" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+            ← Back to Log In
+          </button>
+        </div>
+      </div>
+    </main>
+  );
+}
+
 export default function AuthPage() {
   const [screen, setScreen] = useState<Screen>("landing");
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
+  const [registeredEmail, setRegisteredEmail] = useState("");
+
+  useEffect(() => {
+    async function fetchPremData() {
+      try {
+        const [liveMatches, liveLeaderboard] = await Promise.all([
+          authApi.getLandingMatches(),
+          authApi.getLandingLeaderboard()
+        ]);
+
+        setMatches(liveMatches);
+        setLeaderboard(liveLeaderboard);
+      } catch (error) {
+        console.error("Failed to parse dynamic live metrics from backend:", error);
+      }
+    }
+
+    if (screen === "landing") {
+      fetchPremData();
+    }
+  }, [screen]);
+
   return (
     <div className="min-h-screen bg-background">
       <NavBar screen={screen} setScreen={setScreen} />
-      {screen === "landing" && <LandingScreen setScreen={setScreen} />}
-      {screen === "login" && <LoginScreen setScreen={setScreen} />}
-      {screen === "register" && <RegisterScreen setScreen={setScreen} />}
+      {screen === "landing" && (
+        <LandingScreen matches={matches} leaderboard={leaderboard} setScreen={setScreen} />
+      )}
+      {screen === "login" && (
+        <LoginScreen leaderboard={leaderboard} setScreen={setScreen} />
+      )}
+      {screen === "register" && (
+        <RegisterScreen setScreen={setScreen} onRegister={setRegisteredEmail} />
+      )}
+      {screen === "verify" && (
+        <VerifyScreen email={registeredEmail} setScreen={setScreen} />
+      )}
     </div>
   );
 }

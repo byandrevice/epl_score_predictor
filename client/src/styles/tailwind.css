@@ -1,4 +1,12 @@
+/* 1. External asset imports must go at the absolute top */
+@import "./fonts.css";
+
+/* 2. Framework core */
 @import "tailwindcss";
 @import 'tw-animate-css';
 
+/* 3. Custom design tokens, themes, and base rules */
+@import "./theme.css";
+
+/* 4. Scanner sources */
 @source '../**/*.{js,ts,jsx,tsx}';

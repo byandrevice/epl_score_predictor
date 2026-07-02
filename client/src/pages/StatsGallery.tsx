@@ -1,3 +1,6 @@
+/*---------Stats Page - analytics or stats----------*/
+
+
 import React from 'react';
 import { useState } from "react";
 import { CheckCircle2, XCircle, MinusCircle, TrendingUp, TrendingDown, Minus, Star, Zap } from "lucide-react";

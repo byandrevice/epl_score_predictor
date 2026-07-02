@@ -1,5 +1,5 @@
-import React from 'react';
-import { NavLink, Outlet, useNavigate } from "react-router";
+import React, { useState } from 'react';
+import { NavLink, Outlet, useNavigate, useLoaderData } from "react-router";
 import { Zap, LogOut, LayoutGrid, Crosshair, Trophy, BarChart2, User } from "lucide-react";
 
 const NAV_LINKS = [
@@ -10,8 +10,38 @@ const NAV_LINKS = [
   { to: "/dashboard/profile", label: "Profile", icon: User },
 ];
 
+// Reflect the strict data shape delivered by the backend loader
+interface DashboardLoaderData {
+  username: string;
+  avatarInitials: string;
+  globalRank: string;
+  gameweekNumber: number;
+  gameweekIsOpen: boolean;
+  deadlineText: string;
+}
+
 export default function DashboardLayout() {
   const navigate = useNavigate();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  
+  // Instantly consume real-time layout metrics resolved by routes.tsx
+  const data = useLoaderData() as DashboardLoaderData;
+
+  // Live Handler: Simulates server-side session termination
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      console.log("Live Event: Destroying authentication token session...");
+      // Optional: clear local tokens here
+      // localStorage.removeItem("token");
+      await new Promise((resolve) => setTimeout(resolve, 800)); 
+      navigate("/");
+    } catch (err) {
+      console.error("Logout failed", err);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -58,51 +88,70 @@ export default function DashboardLayout() {
 
           {/* User + Logout */}
           <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-muted/40 rounded-sm border border-border">
-              <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                <span className="text-[9px] font-bold text-primary" style={{ fontFamily: "'JetBrains Mono', monospace" }}>XP</span>
+            {data ? (
+              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-muted/40 rounded-sm border border-border">
+                <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                  <span className="text-[9px] font-bold text-primary" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                    {data.avatarInitials}
+                  </span>
+                </div>
+                <span className="text-xs text-foreground font-medium" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                  {data.username}
+                </span>
               </div>
-              <span className="text-xs text-foreground font-medium" style={{ fontFamily: "'DM Sans', sans-serif" }}>xavi_prophet</span>
-            </div>
+            ) : (
+              <div className="hidden md:block w-24 h-8 bg-muted animate-pulse rounded-sm" />
+            )}
+
             <button
-              onClick={() => navigate("/")}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground border border-border hover:border-border/80 transition-colors rounded-sm"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground border border-border hover:border-border/80 transition-colors rounded-sm disabled:opacity-50"
               style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.1em" }}
             >
-              <LogOut size={12} />
-              <span className="hidden sm:block uppercase tracking-widest">Logout</span>
+              <LogOut size={12} className={isLoggingOut ? "animate-spin" : ""} />
+              <span className="hidden sm:block uppercase tracking-widest">
+                {isLoggingOut ? "Exiting..." : "Logout"}
+              </span>
             </button>
           </div>
         </div>
 
         {/* GW Badge strip */}
-        <div className="bg-secondary/40 border-t border-border px-4 md:px-8 py-1.5 flex items-center gap-4 max-w-full overflow-x-auto scrollbar-hide">
-          <div className="max-w-7xl mx-auto w-full flex items-center gap-4">
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+        <div className="bg-secondary/40 border-t border-border px-4 md:px-8 py-1.5 flex items-center gap-4 max-w-full overflow-x-auto scrollbar-hide h-9">
+          {data ? (
+            <div className="max-w-7xl mx-auto w-full flex items-center gap-4">
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <span className={`w-1.5 h-1.5 rounded-full ${data.gameweekIsOpen ? "bg-primary animate-pulse" : "bg-muted-foreground"}`} />
+                <span
+                  className="text-[10px] tracking-widest text-primary uppercase font-semibold"
+                  style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                >
+                  GW{data.gameweekNumber} · {data.gameweekIsOpen ? "Predictions Open" : "Closed"}
+                </span>
+              </div>
+              <div className="h-3 w-px bg-border flex-shrink-0" />
               <span
-                className="text-[10px] tracking-widest text-primary uppercase font-semibold"
+                className="text-[10px] tracking-wider text-muted-foreground uppercase"
                 style={{ fontFamily: "'JetBrains Mono', monospace" }}
               >
-                GW38 · Predictions Open
+                Deadline: {data.deadlineText}
               </span>
+              <div className="ml-auto flex-shrink-0">
+                <span
+                  className="text-[10px] tracking-widest text-muted-foreground uppercase"
+                  style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                >
+                  Your rank: <span className="text-foreground font-semibold">{data.globalRank}</span>
+                </span>
+              </div>
             </div>
-            <div className="h-3 w-px bg-border flex-shrink-0" />
-            <span
-              className="text-[10px] tracking-wider text-muted-foreground uppercase"
-              style={{ fontFamily: "'JetBrains Mono', monospace" }}
-            >
-              Deadline: Fri 4 Jul · 19:45 BST
-            </span>
-            <div className="ml-auto flex-shrink-0">
-              <span
-                className="text-[10px] tracking-widest text-muted-foreground uppercase"
-                style={{ fontFamily: "'JetBrains Mono', monospace" }}
-              >
-                Your rank: <span className="text-foreground font-semibold">#2,104</span>
-              </span>
+          ) : (
+            <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
+              <div className="h-3 w-1/3 bg-muted animate-pulse rounded" />
+              <div className="h-3 w-12 bg-muted animate-pulse rounded" />
             </div>
-          </div>
+          )}
         </div>
       </header>
 
