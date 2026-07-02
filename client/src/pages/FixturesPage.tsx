@@ -1,6 +1,3 @@
-/*---------Fixtures Page----------*/
-
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router";
 import { Clock, MapPin, Trophy, ChevronRight, Filter, Calendar, Loader2, Save } from "lucide-react";
@@ -51,7 +48,6 @@ export default function FixturesPage() {
       setLoading(true);
       setError(null);
       try {
-        // Simulating getting the current logged-in user id from localStorage
         const userData = JSON.parse(localStorage.getItem('user_data') || '{}');
         const userId = userData.id || "guest";
 
@@ -73,19 +69,91 @@ export default function FixturesPage() {
         setFixtures(fixturesData);
         setLeaderboard(leaderboardData);
         setUserStats(profileData);
-      } catch (err: any) {
-        setError(err.message || "Something went wrong.");
-      } finally {
+        } catch (err: any) {
+          
+          /*******************************************************************************
+           * 🚨 ATTENTION DEVELOPER: DELETE THIS ENTIRE BLOCK WHEN THE API IS READY 🚨
+           * 
+           * PURPOSE:
+           * This 'catch' block acts as a front-end safety net. Since your backend API team 
+           * hasn't started the live server yet, your fetch calls will naturally fail. 
+           * Instead of locking you out with a "Network Connection Error" screen, this block 
+           * intercepts the error and populates your UI layout fields with high-fidelity, 
+           * hardcoded mockup match configurations.
+           * 
+           * WHEN TO DELETE:
+           * Remove this entire fallback catch block as soon as your local API server is online 
+           * and successfully serving JSON payloads from:
+           *    - GET /api/fixtures
+           *    - GET /api/leaderboard
+           *    - GET /api/user-stats
+           * 
+           * PRODUCTION STATUS: UNFIT FOR DEPLOYMENT (LOCAL TESTING ONLY)
+           ******************************************************************************/
+          
+          console.warn("Backend offline, utilizing development mockup arrays.");
+          
+          setFixtures([
+            {
+              id: 1,
+              home: "Arsenal",
+              homeShort: "ARS",
+              homeCrest: "🔴",
+              away: "Manchester City",
+              awayShort: "MCI",
+              awayCrest: "🩵",
+              date: "May 19, 2026",
+              time: "16:00",
+              venue: "Emirates Stadium",
+              week: "GW38",
+              predicted: false
+            },
+            {
+              id: 2,
+              home: "Chelsea",
+              homeShort: "CHE",
+              away: "Liverpool",
+              awayShort: "LIV",
+              homeCrest: "🔵",
+              awayCrest: "🔺",
+              date: "May 19, 2026",
+              time: "16:00",
+              venue: "Stamford Bridge",
+              week: "GW38",
+              predicted: true,
+              predictedHomeScore: 2,
+              predictedAwayScore: 1
+            }
+          ]);
+
+          setLeaderboard([
+            { rank: 1, name: "GoonerPredicts", pts: 345, accuracy: "68%", trend: "up" },
+            { rank: 2, name: "PepTactics", pts: 340, accuracy: "65%", trend: "same" }
+          ]);
+
+          setUserStats({ rank: "#4,120", points: 210, accuracy: "52%", count: "14/38" });
+          
+          /*******************************************************************************
+           * END OF DEVMOCK INTERCEPTOR BLOCK
+           * 
+           * Replace with this after api avalible --- 
+            } catch (err: any) {
+              // Standard production error handling:
+              setError(err.message || "Something went wrong.");
+            } finally {
+           ******************************************************************************/
+
+        } finally {
         setLoading(false);
       }
     }
 
     fetchDashboardData();
-  }, [activeFilter]); // Triggers rewrite whenever filter tabs are swapped!
+  }, [activeFilter]); 
 
   // --- 2. Dynamic Input Handler for User Predictions ---
   const handleScoreInputChange = (fixtureId: number, team: 'home' | 'away', value: string) => {
-    const numericValue = value.replace(/\D/g, ""); // strip characters except digits
+    const numericValue = value.replace(/\D/g, ""); 
     setFixtures(prev => prev.map(f => {
       if (f.id === fixtureId) {
         return {
@@ -119,15 +187,15 @@ export default function FixturesPage() {
 
       if (!response.ok) throw new Error("Could not save prediction.");
 
-      // Set item to marked locally as predicted successfully
       setFixtures(prev => prev.map(f => f.id === fixtureId ? { ...f, predicted: true } : f));
       alert("Prediction saved successfully!");
     } catch (err: any) {
-      alert(err.toString());
+      // Dev mode save fallback simulation
+      setFixtures(prev => prev.map(f => f.id === fixtureId ? { ...f, predicted: true } : f));
+      alert("Dev Mode Sync Notice: Saved match state locally!");
     }
   };
 
-  // --- Loading / Error Guard Screens ---
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
@@ -135,18 +203,6 @@ export default function FixturesPage() {
         <span className="text-xs text-muted-foreground uppercase font-semibold tracking-widest" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
           Loading Live Matchday Data...
         </span>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-12 max-w-md mx-auto">
-        <p className="text-sm font-bold text-destructive">Network Connection Error</p>
-        <p className="text-xs text-muted-foreground mt-1">{error}</p>
-        <button onClick={() => setActiveFilter(activeFilter)} className="mt-4 px-4 py-2 bg-primary text-primary-foreground text-xs font-bold rounded-sm uppercase tracking-wider">
-          Retry Connection
-        </button>
       </div>
     );
   }
@@ -200,9 +256,9 @@ export default function FixturesPage() {
 
                 {/* Main Match Container Row */}
                 <div className="grid grid-cols-3 items-center text-center gap-2 mb-4">
-                  {/* Home Team (Clickable link wrapper added here) */}
+                  {/* Home Team (Fixed navigation path parameter targeting team shortcode string here) */}
                   <div 
-                    onClick={() => navigate(`/dashboard/team/${fixture.id}`)}
+                    onClick={() => navigate(`/dashboard/team/${fixture.homeShort}`)}
                     className="flex flex-col items-center gap-1 cursor-pointer hover:underline"
                   >
                     <span className="text-xl">{fixture.homeCrest}</span>
@@ -228,8 +284,11 @@ export default function FixturesPage() {
                     />
                   </div>
 
-                  {/* Away Team */}
-                  <div className="flex flex-col items-center gap-1">
+                  {/* Away Team (Added clickable navigation element here for full UI alignment symmetry) */}
+                  <div 
+                    onClick={() => navigate(`/dashboard/team/${fixture.awayShort}`)}
+                    className="flex flex-col items-center gap-1 cursor-pointer hover:underline"
+                  >
                     <span className="text-xl">{fixture.awayCrest}</span>
                     <span className="text-sm font-bold truncate max-w-[110px]">{fixture.away}</span>
                   </div>

@@ -101,7 +101,62 @@ export default function LeaderboardPage() {
         setUsers(data.users);
         setCurrentUser(data.currentUser ?? null);
       } catch (err: any) {
-        setError(err.message || "Something went wrong.");
+        
+        /*******************************************************************************
+         * 🚨 ATTENTION DEVELOPER: DELETE THIS ENTIRE BLOCK WHEN THE API IS READY 🚨
+         * 
+         * PURPOSE:
+         * This 'catch' block acts as a front-end safety net. Since your backend API team 
+         * hasn't started the live server yet, your fetch calls will naturally fail. 
+         * Instead of locking you out with a "Network Connection Error" screen, this block 
+         * intercepts the error and populates your UI layout fields with high-fidelity, 
+         * hardcoded mockup leaderboard standings.
+         * 
+         * WHEN TO DELETE:
+         * Remove this entire fallback catch block as soon as your local API server is online 
+         * and successfully serving JSON payloads from:
+         *    - GET /api/leaderboard?scope=...
+         * 
+         * PRODUCTION STATUS: UNFIT FOR DEPLOYMENT (LOCAL TESTING ONLY)
+         ******************************************************************************/
+        
+        console.warn("Backend offline, utilizing development mockup arrays.");
+
+        // Generates an array of 30 mock competitors to test truncation & sticky bars
+        const mockUsers: LeaderboardUser[] = [
+          { rank: 1, userId: "u1", name: "GoonerPredicts", pts: 345, accuracy: "68%", trend: "up" },
+          { rank: 2, userId: "u2", name: "PepTactics", pts: 340, accuracy: "65%", trend: "same" },
+          { rank: 3, userId: "u3", name: "SakaSpur", pts: 332, accuracy: "63%", trend: "down" },
+          { rank: 4, userId: "u4", name: "AnfieldReds", pts: 320, accuracy: "61%", trend: "up" },
+          { rank: 5, userId: "u5", name: "BlueChelsea", pts: 315, accuracy: "60%", trend: "down" },
+          ...Array.from({ length: 25 }, (_, i) => ({
+            rank: i + 6,
+            userId: `u_mock_${i}`,
+            name: `Predictor_Contender_${i + 6}`,
+            pts: 300 - i * 4,
+            accuracy: `${58 - Math.floor(i / 2)}%`,
+            trend: (i % 3 === 0 ? "up" : i % 3 === 1 ? "down" : "same") as "up" | "down" | "same"
+          }))
+        ];
+
+        // Custom simulated user row placed deep inside the standing matrix to test the fixed footer sticky layer
+        const simulatedMe: LeaderboardUser = {
+          rank: 42,
+          userId: "my-dev-id",
+          name: "DevTester_Bypass",
+          pts: 210,
+          accuracy: "52%",
+          trend: "up",
+          isCurrentUser: true
+        };
+
+        setUsers([...mockUsers, simulatedMe]);
+        setCurrentUser(simulatedMe);
+
+        /*******************************************************************************
+         * END OF DEVMOCK INTERCEPTOR BLOCK
+         ******************************************************************************/
+
       } finally {
         setLoading(false);
       }
@@ -125,7 +180,7 @@ export default function LeaderboardPage() {
     ? visible.some((u) => u.userId === currentUser.userId)
     : true;
 
-  // --- Loading / Error Guard Screens ---
+  // --- Loading Guard Screens ---
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
@@ -136,21 +191,6 @@ export default function LeaderboardPage() {
         >
           Loading Leaderboard...
         </span>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-12 max-w-md mx-auto">
-        <p className="text-sm font-bold text-destructive">Network Connection Error</p>
-        <p className="text-xs text-muted-foreground mt-1">{error}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="mt-4 px-4 py-2 bg-primary text-primary-foreground text-xs font-bold rounded-sm uppercase tracking-wider"
-        >
-          Retry Connection
-        </button>
       </div>
     );
   }

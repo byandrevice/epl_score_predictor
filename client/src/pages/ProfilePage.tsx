@@ -58,9 +58,9 @@ export default function ProfilePage() {
 
   const BACKEND_URL = "http://localhost:5001/api";
 
-  // --- 1. Fetch profile + stats on mount ---
+  // --- 1. Fetch user account profile configurations ---
   useEffect(() => {
-    async function fetchProfile() {
+    async function fetchProfileAndStats() {
       setLoading(true);
       setError(null);
       try {
@@ -70,41 +70,89 @@ export default function ProfilePage() {
           return;
         }
 
-        const headers = { Authorization: `Bearer ${token}` };
-
         const [profileRes, statsRes] = await Promise.all([
-          fetch(`${BACKEND_URL}/profile`, { headers }),
-          fetch(`${BACKEND_URL}/user-stats`, { headers }),
+          fetch(`${BACKEND_URL}/user/profile`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${BACKEND_URL}/user/stats`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ]);
 
         if (!profileRes.ok || !statsRes.ok) {
-          throw new Error("Failed to load account data.");
+          throw new Error("Failed to sync personal credential vectors.");
         }
 
-        const profileData: ProfileData = await profileRes.json();
-        const statsData: ProfileStats = await statsRes.json();
+        const pData = await profileRes.json();
+        const sData = await statsRes.json();
 
-        setProfile(profileData);
-        setDraft(profileData);
-        setStats(statsData);
+        setProfile(pData);
+        setDraft(pData);
+        setStats(sData);
       } catch (err: any) {
-        setError(err.message || "Something went wrong.");
+        
+        /*******************************************************************************
+         * 🚨 ATTENTION DEVELOPER: DELETE THIS ENTIRE BLOCK WHEN THE API IS READY 🚨
+         * * PURPOSE:
+         * This 'catch' block acts as a front-end safety net. Since your backend API team 
+         * hasn't started the live server yet, your fetch calls will naturally fail. 
+         * Instead of locking you out with a "Network Connection Error" screen, this block 
+         * intercepts the error and populates your UI layout fields with high-fidelity, 
+         * hardcoded mockup user profile stats and inputs.
+         * * WHEN TO DELETE:
+         * Remove this entire fallback catch block as soon as your local API server is online 
+         * and successfully serving JSON payloads from:
+         * - GET /api/user/profile
+         * - GET /api/user/stats
+         * * PRODUCTION STATUS: UNFIT FOR DEPLOYMENT (LOCAL TESTING ONLY)
+         ******************************************************************************/
+        
+        console.warn("Backend offline, utilizing development mockup arrays.");
+
+        const mockProfile: ProfileData = {
+          username: "DevTester_Bypass",
+          email: "developer@prempredict.io",
+          firstName: "Dev",
+          lastName: "Tester",
+          favoriteTeam: "Arsenal",
+          memberSince: "August 2025",
+          emailNotifications: true,
+          reminderNotifications: false
+        };
+
+        const mockStats: ProfileStats = {
+          rank: "#4,120",
+          points: 210,
+          accuracy: "52%",
+          correctScores: 14,
+          predictionsMade: 38
+        };
+
+        setProfile(mockProfile);
+        setDraft(mockProfile);
+        setStats(mockStats);
+
+        /*******************************************************************************
+         * END OF DEVMOCK INTERCEPTOR BLOCK
+         ******************************************************************************/
+
       } finally {
         setLoading(false);
       }
     }
 
-    fetchProfile();
+    fetchProfileAndStats();
   }, [navigate]);
 
-  // --- 2. Save profile changes ---
-  const handleSave = async () => {
+  // --- 2. Post updated profile attributes ---
+  const handleSaveProfile = async () => {
     if (!draft) return;
     setSaving(true);
     setError(null);
+    setSaveConfirmed(false);
     try {
       const token = localStorage.getItem("auth_token");
-      const response = await fetch(`${BACKEND_URL}/profile`, {
+      const res = await fetch(`${BACKEND_URL}/user/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -113,23 +161,30 @@ export default function ProfilePage() {
         body: JSON.stringify(draft),
       });
 
-      if (!response.ok) throw new Error("Could not save profile changes.");
+      if (!res.ok) throw new Error("Could not commit settings adjustments.");
 
+      const updated = await res.json();
+      setProfile(updated);
+      setDraft(updated);
+      setEditing(false);
+      setSaveConfirmed(true);
+    } catch (err: any) {
+      // Offline mode save fallback simulation
       setProfile(draft);
       setEditing(false);
       setSaveConfirmed(true);
-      setTimeout(() => setSaveConfirmed(false), 2500);
-    } catch (err: any) {
-      setError(err.message || "Could not save profile changes.");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleCancel = () => {
-    setDraft(profile);
-    setEditing(false);
-    setError(null);
+  const handleToggle = (key: "emailNotifications" | "reminderNotifications") => {
+    if (!draft) return;
+    setDraft((prev) => (prev ? { ...prev, [key]: !prev[key] } : null));
+    // Auto save layout for notification alterations
+    setTimeout(() => {
+      if (!editing) handleSaveProfile();
+    }, 50);
   };
 
   const handleLogout = () => {
@@ -138,297 +193,236 @@ export default function ProfilePage() {
     navigate("/");
   };
 
-  const updateDraft = (field: keyof ProfileData, value: string | boolean) => {
-    setDraft((prev) => (prev ? { ...prev, [field]: value } : prev));
-  };
-
-  // --- Loading / Error Guard Screens ---
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
         <Loader2 className="animate-spin text-primary" size={32} />
-        <span className="text-xs text-muted-foreground uppercase font-semibold tracking-widest" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-          Loading Profile...
+        <span
+          className="text-xs text-muted-foreground uppercase font-semibold tracking-widest"
+          style={{ fontFamily: "'JetBrains Mono', monospace" }}
+        >
+          Loading Profile Portfolio...
         </span>
       </div>
     );
   }
 
-  if (error && !profile) {
-    return (
-      <div className="text-center py-12 max-w-md mx-auto">
-        <p className="text-sm font-bold text-destructive">Network Connection Error</p>
-        <p className="text-xs text-muted-foreground mt-1">{error}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="mt-4 px-4 py-2 bg-primary text-primary-foreground text-xs font-bold rounded-sm uppercase tracking-wider"
-        >
-          Retry Connection
-        </button>
-      </div>
-    );
-  }
-
-  if (!profile || !draft || !stats) return null;
-
-  const initials = `${profile.firstName?.[0] ?? ""}${profile.lastName?.[0] ?? ""}`.toUpperCase() || "?";
-
   return (
-    <div className="max-w-5xl mx-auto px-4 md:px-8 py-8">
-      {/* PAGE HEADER */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-1 h-6 bg-primary rounded-full" />
-        <h1
-          className="text-2xl font-black tracking-widest uppercase text-foreground"
-          style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
-        >
-          Your Profile
-        </h1>
-      </div>
-
-      {/* IDENTITY CARD */}
-      <div className="bg-card rounded-xl border border-border p-6 mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center flex-shrink-0">
-              <span
-                className="text-xl font-black text-primary"
-                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
-              >
-                {initials}
-              </span>
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-bold text-foreground" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-                  {profile.firstName} {profile.lastName}
-                </span>
-              </div>
-              <span
-                className="text-xs text-muted-foreground tracking-wider"
-                style={{ fontFamily: "'JetBrains Mono', monospace" }}
-              >
-                @{profile.username} · Member since {profile.memberSince}
-              </span>
-            </div>
+    <div className="max-w-4xl mx-auto px-4 md:px-8 py-8 flex flex-col gap-6">
+      {/* HEADER HERO ROW */}
+      <div className="bg-card rounded-xl border border-border p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center text-lg font-black">
+            {profile?.firstName?.[0] || profile?.username?.[0] || "U"}
           </div>
-
-          {!editing ? (
-            <button
-              onClick={() => setEditing(true)}
-              className="flex items-center gap-1.5 px-4 py-2 border border-border text-foreground text-xs uppercase tracking-widest font-bold rounded-sm hover:border-primary/40 transition-colors self-start sm:self-auto"
+          <div>
+            <h1
+              className="text-2xl font-black tracking-widest uppercase text-foreground"
               style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
             >
-              <Pencil size={12} />
-              <span>Edit Profile</span>
-            </button>
-          ) : (
-            <div className="flex items-center gap-2 self-start sm:self-auto">
-              <button
-                onClick={handleCancel}
-                className="flex items-center gap-1.5 px-3 py-2 border border-border text-muted-foreground text-xs uppercase tracking-widest font-bold rounded-sm hover:text-foreground transition-colors"
-                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
-              >
-                <X size={12} />
-                <span>Cancel</span>
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground text-xs uppercase tracking-widest font-bold rounded-sm hover:opacity-90 transition-opacity disabled:opacity-50"
-                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
-              >
-                <Save size={12} />
-                <span>{saving ? "Saving..." : "Save Changes"}</span>
-              </button>
-            </div>
-          )}
+              {profile?.firstName} {profile?.lastName}
+            </h1>
+            <p
+              className="text-xs font-mono text-muted-foreground uppercase tracking-widest"
+              style={{ fontFamily: "'JetBrains Mono', monospace" }}
+            >
+              @{profile?.username} · Member Since {profile?.memberSince}
+            </p>
+          </div>
         </div>
 
-        {saveConfirmed && (
-          <div className="mt-4 flex items-center gap-2 px-3 py-2 bg-primary/10 border border-primary/30 rounded-sm">
-            <Check size={12} className="text-primary" />
-            <span className="text-[10px] text-primary uppercase tracking-widest font-semibold" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-              Profile updated successfully
-            </span>
+        {/* Action button toggles */}
+        {!editing ? (
+          <button
+            onClick={() => setEditing(true)}
+            className="flex items-center gap-1.5 px-4 py-2 border border-border text-foreground text-xs uppercase tracking-widest font-bold rounded-sm hover:border-primary/40 transition-colors self-start sm:self-auto"
+            style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+          >
+            <Pencil size={12} />
+            <span>Edit Profile</span>
+          </button>
+        ) : (
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <button
+              onClick={() => {
+                setDraft(profile);
+                setEditing(false);
+              }}
+              className="flex items-center gap-1 px-3 py-2 border border-border text-muted-foreground text-xs uppercase tracking-widest font-bold rounded-sm hover:text-foreground transition-colors"
+              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+            >
+              <X size={12} />
+              <span>Cancel</span>
+            </button>
+            <button
+              onClick={handleSaveProfile}
+              disabled={saving}
+              className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground text-xs uppercase tracking-widest font-bold rounded-sm hover:opacity-90 disabled:opacity-50 transition-opacity"
+              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+            >
+              {saving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
+              <span>{saving ? "Saving..." : "Save Changes"}</span>
+            </button>
           </div>
-        )}
-        {error && profile && (
-          <p className="mt-3 text-[10px] text-destructive tracking-wider" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-            {error}
-          </p>
         )}
       </div>
 
-      {/* STATS ROW */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      {saveConfirmed && (
+        <div className="bg-primary/10 border border-primary/20 text-primary rounded-sm p-3.5 flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
+          <Check size={14} />
+          <span>Account changes committed successfully.</span>
+        </div>
+      )}
+
+      {/* CORE STATS GRID HERO */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Global Rank", value: `#${stats.rank}`, icon: Trophy },
-          { label: "Total Points", value: stats.points.toLocaleString(), icon: TrendingUp },
-          { label: "Accuracy", value: stats.accuracy, icon: Target },
-          { label: "Predictions Made", value: stats.predictionsMade, icon: User },
-        ].map(({ label, value, icon: Icon }) => (
-          <div key={label} className="bg-card rounded-xl border border-border px-4 py-4 flex flex-col gap-2">
-            <Icon size={14} className="text-primary" />
-            <span className="text-xl font-black text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-              {value}
-            </span>
-            <span
-              className="text-[9px] text-muted-foreground uppercase tracking-widest"
-              style={{ fontFamily: "'JetBrains Mono', monospace" }}
-            >
-              {label}
-            </span>
+          { label: "Global Rank", val: stats?.rank, icon: Trophy },
+          { label: "Total Points", val: stats?.points, icon: TrendingUp },
+          { label: "Accuracy Matrix", val: stats?.accuracy, icon: Target },
+          { label: "Exact Scores", val: stats?.correctScores, icon: Check, sub: `out of ${stats?.predictionsMade} picks` },
+        ].map((block, idx) => (
+          <div key={idx} className="bg-card rounded-xl border border-border p-5 flex flex-col justify-between">
+            <div className="flex justify-between items-start gap-2">
+              <span
+                className="text-[9px] text-muted-foreground uppercase tracking-widest font-mono"
+                style={{ fontFamily: "'JetBrains Mono', monospace" }}
+              >
+                {block.label}
+              </span>
+              <block.icon size={14} className="text-primary/70 flex-shrink-0" />
+            </div>
+            <div className="mt-4">
+              <span
+                className="text-xl md:text-2xl font-black text-foreground tracking-tight"
+                style={{ fontFamily: "'JetBrains Mono', monospace" }}
+              >
+                {block.val}
+              </span>
+              {block.sub && <p className="text-[10px] text-muted-foreground mt-0.5">{block.sub}</p>}
+            </div>
           </div>
         ))}
       </div>
 
-      {/* ACCOUNT DETAILS */}
-      <div className="bg-card rounded-xl border border-border p-6 mb-6">
-        <span
-          className="text-sm font-bold tracking-widest uppercase text-foreground block mb-5"
+      {/* DETAILED FORM INPUT BLOCKS */}
+      <div className="bg-card rounded-xl border border-border p-6 flex flex-col gap-5">
+        <h2
+          className="text-sm font-bold uppercase tracking-wider text-foreground border-b border-border pb-3"
           style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
         >
-          Account Details
-        </span>
+          Personal Details
+        </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-sm">
+          {[
+            { label: "First Name", key: "firstName", type: "text" },
+            { label: "Last Name", key: "lastName", type: "text" },
+            { label: "Username", key: "username", type: "text" },
+            { label: "Email Address", key: "email", type: "email" },
+          ].map((field) => (
+            <div key={field.key} className="flex flex-col gap-1.5">
+              <label
+                className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground"
+                style={{ fontFamily: "'JetBrains Mono', monospace" }}
+              >
+                {field.label}
+              </label>
+              <input
+                type={field.type}
+                disabled={!editing}
+                value={draft ? (draft as any)[field.key] : ""}
+                onChange={(e) => setDraft((prev) => (prev ? { ...prev, [field.key]: e.target.value } : null))}
+                className={`px-3.5 py-2.5 rounded-sm border text-sm outline-none transition-colors ${
+                  !editing
+                    ? "bg-muted/40 border-border/60 text-muted-foreground cursor-not-allowed"
+                    : "bg-muted/80 border-border focus:border-primary/60 text-foreground"
+                }`}
+                style={{ fontFamily: "'DM Sans', sans-serif" }}
+              />
+            </div>
+          ))}
+
+          {/* Favorite Team Selector Dropdown */}
           <div className="flex flex-col gap-1.5">
             <label
-              className="text-[10px] tracking-widest uppercase text-muted-foreground font-semibold"
+              className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground"
               style={{ fontFamily: "'JetBrains Mono', monospace" }}
             >
-              First Name
-            </label>
-            <input
-              type="text"
-              disabled={!editing}
-              value={draft.firstName}
-              onChange={(e) => updateDraft("firstName", e.target.value)}
-              className="w-full bg-muted border border-border px-4 py-2.5 text-foreground text-sm disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/20 transition-all"
-              style={{ fontFamily: "'DM Sans', sans-serif" }}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label
-              className="text-[10px] tracking-widest uppercase text-muted-foreground font-semibold"
-              style={{ fontFamily: "'JetBrains Mono', monospace" }}
-            >
-              Last Name
-            </label>
-            <input
-              type="text"
-              disabled={!editing}
-              value={draft.lastName}
-              onChange={(e) => updateDraft("lastName", e.target.value)}
-              className="w-full bg-muted border border-border px-4 py-2.5 text-foreground text-sm disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/20 transition-all"
-              style={{ fontFamily: "'DM Sans', sans-serif" }}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label
-              className="text-[10px] tracking-widest uppercase text-muted-foreground font-semibold"
-              style={{ fontFamily: "'JetBrains Mono', monospace" }}
-            >
-              Username
-            </label>
-            <input
-              type="text"
-              disabled={!editing}
-              value={draft.username}
-              onChange={(e) => updateDraft("username", e.target.value)}
-              className="w-full bg-muted border border-border px-4 py-2.5 text-foreground text-sm disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/20 transition-all"
-              style={{ fontFamily: "'DM Sans', sans-serif" }}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label
-              className="text-[10px] tracking-widest uppercase text-muted-foreground font-semibold"
-              style={{ fontFamily: "'JetBrains Mono', monospace" }}
-            >
-              Email Address
-            </label>
-            <input
-              type="email"
-              disabled={!editing}
-              value={draft.email}
-              onChange={(e) => updateDraft("email", e.target.value)}
-              className="w-full bg-muted border border-border px-4 py-2.5 text-foreground text-sm disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/20 transition-all"
-              style={{ fontFamily: "'DM Sans', sans-serif" }}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5 sm:col-span-2">
-            <label
-              className="text-[10px] tracking-widest uppercase text-muted-foreground font-semibold"
-              style={{ fontFamily: "'JetBrains Mono', monospace" }}
-            >
-              Favorite Club
+              Supported Club
             </label>
             <select
               disabled={!editing}
-              value={draft.favoriteTeam}
-              onChange={(e) => updateDraft("favoriteTeam", e.target.value)}
-              className="w-full bg-muted border border-border px-4 py-2.5 text-foreground text-sm disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/20 transition-all"
+              value={draft?.favoriteTeam || ""}
+              onChange={(e) => setDraft((prev) => (prev ? { ...prev, favoriteTeam: e.target.value } : null))}
+              className={`px-3.5 py-2.5 rounded-sm border text-sm outline-none transition-colors appearance-none ${
+                !editing
+                  ? "bg-muted/40 border-border/60 text-muted-foreground cursor-not-allowed"
+                  : "bg-muted/80 border-border focus:border-primary/60 text-foreground"
+              }`}
               style={{ fontFamily: "'DM Sans', sans-serif" }}
             >
-              {EPL_TEAMS.map((team) => (
-                <option key={team} value={team}>{team}</option>
+              <option value="">Select a club...</option>
+              {EPL_TEAMS.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
               ))}
             </select>
           </div>
         </div>
       </div>
 
-      {/* PREFERENCES */}
-      <div className="bg-card rounded-xl border border-border p-6 mb-6">
-        <div className="flex items-center gap-2 mb-5">
+      {/* COMPACT NOTIFICATION PREFERENCES TOGGLE ROW */}
+      <div className="bg-card rounded-xl border border-border p-6 flex flex-col gap-4">
+        <div className="flex items-center gap-2 border-b border-border pb-3">
           <Bell size={14} className="text-primary" />
-          <span
-            className="text-sm font-bold tracking-widest uppercase text-foreground"
+          <h2
+            className="text-sm font-bold uppercase tracking-wider text-foreground"
             style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
           >
-            Notification Preferences
-          </span>
+            Notification Vectors
+          </h2>
         </div>
 
-        <div className="flex flex-col divide-y divide-border">
+        <div className="divide-y divide-border/60">
           {[
             {
+              title: "Email Digests",
+              desc: "Receive comprehensive point evaluations and gameweek summary insights.",
               key: "emailNotifications" as const,
-              title: "Email Notifications",
-              desc: "Weekly digest of your results and leaderboard movement.",
             },
             {
+              title: "Lockdown Reminders",
+              desc: "Get urgent system alerts 1 hour prior to upcoming gameweek match closure gates.",
               key: "reminderNotifications" as const,
-              title: "Prediction Reminders",
-              desc: "Get notified before the gameweek deadline closes.",
             },
-          ].map(({ key, title, desc }) => (
-            <div key={key} className="flex items-center justify-between py-4 first:pt-0 last:pb-0">
-              <div>
+          ].map(({ title, desc, key }) => (
+            <div key={key} className="py-4 flex items-center justify-between gap-6">
+              <div className="max-w-xl">
                 <p className="text-sm font-semibold text-foreground" style={{ fontFamily: "'DM Sans', sans-serif" }}>
                   {title}
                 </p>
-                <p className="text-xs text-muted-foreground mt-0.5" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
+                <p
+                  className="text-xs text-muted-foreground mt-0.5"
+                  style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}
+                >
                   {desc}
                 </p>
               </div>
+
+              {/* Toggle Switch Button */}
               <button
                 type="button"
-                onClick={() => editing && updateDraft(key, !draft[key])}
-                disabled={!editing}
-                className={`relative w-10 h-5.5 rounded-full transition-colors flex-shrink-0 disabled:opacity-60 disabled:cursor-not-allowed ${
-                  draft[key] ? "bg-primary" : "bg-switch-background"
+                onClick={() => handleToggle(key)}
+                className={`relative inline-flex w-9 rounded-full transition-colors cursor-pointer p-0.5 outline-none focus:ring-1 focus:ring-primary/20 disabled:opacity-50 disabled:cursor-not-allowed ${
+                  draft?.[key] ? "bg-primary" : "bg-switch-background"
                 }`}
                 style={{ height: "1.375rem" }}
               >
                 <span
                   className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-background transition-transform ${
-                    draft[key] ? "translate-x-4" : "translate-x-0"
+                    draft?.[key] ? "translate-x-4" : "translate-x-0"
                   }`}
                 />
               </button>
