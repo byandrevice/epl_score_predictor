@@ -1,9 +1,15 @@
 import { createBrowserRouter, redirect } from "react-router";
-import AuthPage from "../../pages/AuthPage"; 
+
 import DashboardLayout from "../../layouts/DashboardLayout"; 
+
+import AuthPage from "../../pages/AuthPage"; 
 import FixturesPage from "../../pages/FixturesPage";
-import PlaceholderPage from "../../pages/PlaceholderPage";
+import LeaderboardPage from "../../pages/LeaderboardPage"; 
+import PredictPage from "../../pages/PredictPage"; 
+import ProfilePage from "../../pages/ProfilePage"; 
+
 import StatsGallery from "../../pages/StatsGallery"; 
+import TeamProfilePage from "../../pages/TeamProfilePage"; 
 
 import { dashboardApi } from "../../api/dashboardApi"; 
 
@@ -18,10 +24,6 @@ const router = createBrowserRouter([
     path: "/dashboard",
     Component: DashboardLayout,
     loader: async () => {
-      /*******************************************************************************
-       * 🚨 REMOVE BEFORE PRODUCTION / DEPLOYMENT 🚨
-       * LOCAL DEVMOCK ROUTER LOADER INTERCEPTOR
-       ******************************************************************************/
       const token = localStorage.getItem("auth_token");
       if (token === "dev_bypass_mock_token") {
         return {
@@ -33,7 +35,6 @@ const router = createBrowserRouter([
           deadlineText: "Sun 15:00"
         };
       }
-      /******************************************************************************/
 
       try {
         const data = await dashboardApi.getLayoutMeta();
@@ -54,11 +55,11 @@ const router = createBrowserRouter([
       },
       {
         path: "predict",
-        Component: () => createElement(PlaceholderPage, { title: "Predict" }),
+        Component: PredictPage,
       },
       {
         path: "leaderboard",
-        Component: () => createElement(PlaceholderPage, { title: "Leaderboard" }),
+        Component: LeaderboardPage,
       },
       {
         path: "stats",
@@ -66,7 +67,11 @@ const router = createBrowserRouter([
       },
       {
         path: "profile",
-        Component: () => createElement(PlaceholderPage, { title: "Profile" }),
+        Component: ProfilePage,
+      },
+      {
+        path: "team/:teamId",
+        Component: TeamProfilePage,
       },
     ],
   },
