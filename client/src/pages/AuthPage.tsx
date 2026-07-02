@@ -1,0 +1,422 @@
+import React from 'react';
+import { useState } from "react";
+import { useNavigate } from "react-router";
+import { Eye, EyeOff, Trophy, ChevronRight, Clock, Zap } from "lucide-react";
+
+type Screen = "landing" | "login" | "register";
+
+const MATCHES = [
+  {
+    id: 1,
+    home: "Arsenal",
+    homeShort: "ARS",
+    away: "Man City",
+    awayShort: "MCI",
+    homeCrest: "🔴",
+    awayCrest: "🔵",
+    date: "Sat 5 Jul",
+    time: "12:30",
+    venue: "Emirates Stadium",
+    homeOdds: "2.40",
+    drawOdds: "3.20",
+    awayOdds: "2.90",
+  },
+  {
+    id: 2,
+    home: "Liverpool",
+    homeShort: "LIV",
+    away: "Chelsea",
+    awayShort: "CHE",
+    homeCrest: "🔴",
+    awayCrest: "🔵",
+    date: "Sat 5 Jul",
+    time: "15:00",
+    venue: "Anfield",
+    homeOdds: "1.90",
+    drawOdds: "3.50",
+    awayOdds: "3.80",
+  },
+  {
+    id: 3,
+    home: "Tottenham",
+    homeShort: "TOT",
+    away: "Man Utd",
+    awayShort: "MUN",
+    homeCrest: "⚪",
+    awayCrest: "🔴",
+    date: "Sun 6 Jul",
+    time: "16:30",
+    venue: "Tottenham Hotspur Stadium",
+    homeOdds: "2.10",
+    drawOdds: "3.30",
+    awayOdds: "3.40",
+  },
+];
+
+const LEADERBOARD = [
+  { rank: 1, name: "xavi_prophet", pts: 3842, accuracy: "71%" },
+  { rank: 2, name: "gunner_oracle", pts: 3710, accuracy: "68%" },
+  { rank: 3, name: "redzone_jamie", pts: 3588, accuracy: "66%" },
+  { rank: 4, name: "pitch_vision", pts: 3401, accuracy: "64%" },
+  { rank: 5, name: "klopp_disciple", pts: 3290, accuracy: "63%" },
+];
+
+function NavBar({ screen, setScreen }: { screen: Screen; setScreen: (s: Screen) => void }) {
+  return (
+    <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 h-14 border-b border-border bg-background/90 backdrop-blur-sm">
+      <div className="flex items-center gap-2">
+        <Zap size={16} className="text-primary" fill="currentColor" />
+        <span
+          className="text-sm font-semibold tracking-widest uppercase text-foreground"
+          style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.18em" }}
+        >
+          PremPredict
+        </span>
+      </div>
+      {screen === "landing" && (
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setScreen("login")}
+            className="text-xs tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
+            style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+          >
+            Log In
+          </button>
+          <button
+            onClick={() => setScreen("register")}
+            className="px-4 py-1.5 text-xs tracking-widest uppercase bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity"
+            style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+          >
+            Sign Up
+          </button>
+        </div>
+      )}
+      {(screen === "login" || screen === "register") && (
+        <button
+          onClick={() => setScreen("landing")}
+          className="text-xs tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
+          style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+        >
+          ← Back
+        </button>
+      )}
+    </header>
+  );
+}
+
+function MatchCard({ match }: { match: typeof MATCHES[0] }) {
+  const [prediction, setPrediction] = useState<"home" | "draw" | "away" | null>(null);
+  return (
+    <div className="bg-card border border-border flex flex-col gap-0 overflow-hidden group hover:border-primary/30 transition-colors duration-200">
+      <div className="px-4 py-2.5 flex items-center justify-between border-b border-border bg-muted/30">
+        <div className="flex items-center gap-1.5">
+          <Clock size={11} className="text-muted-foreground" />
+          <span className="text-[10px] tracking-widest text-muted-foreground uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+            {match.date} · {match.time}
+          </span>
+        </div>
+        <span className="text-[10px] tracking-wider text-muted-foreground uppercase truncate max-w-[110px]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+          {match.venue}
+        </span>
+      </div>
+      <div className="px-5 py-5 flex items-center justify-between gap-3">
+        <div className="flex flex-col items-center gap-1.5 flex-1">
+          <span className="text-2xl">{match.homeCrest}</span>
+          <span className="text-base font-bold text-foreground tracking-wide text-center leading-tight" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+            {match.home}
+          </span>
+          <span className="text-[10px] text-muted-foreground tracking-widest" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+            {match.homeShort}
+          </span>
+        </div>
+        <div className="flex flex-col items-center gap-1 flex-shrink-0">
+          <span className="text-xl font-black text-muted-foreground/40" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>VS</span>
+        </div>
+        <div className="flex flex-col items-center gap-1.5 flex-1">
+          <span className="text-2xl">{match.awayCrest}</span>
+          <span className="text-base font-bold text-foreground tracking-wide text-center leading-tight" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+            {match.away}
+          </span>
+          <span className="text-[10px] text-muted-foreground tracking-widest" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+            {match.awayShort}
+          </span>
+        </div>
+      </div>
+      <div className="px-4 pb-4 grid grid-cols-3 gap-1.5">
+        {(["home", "draw", "away"] as const).map((type) => {
+          const label = type === "home" ? match.homeShort : type === "away" ? match.awayShort : "DRW";
+          const odds = type === "home" ? match.homeOdds : type === "away" ? match.awayOdds : match.drawOdds;
+          const active = prediction === type;
+          return (
+            <button key={type} onClick={() => setPrediction(active ? null : type)}
+              className={`flex flex-col items-center py-2 border text-xs transition-all duration-150 ${active ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"}`}>
+              <span className="text-[10px] tracking-widest font-semibold uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{label}</span>
+              <span className="text-sm font-bold mt-0.5" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>{odds}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function LeaderboardWidget({ setScreen }: { setScreen: (s: Screen) => void }) {
+  return (
+    <div className="bg-card border border-border overflow-hidden">
+      <div className="px-5 py-3 flex items-center justify-between border-b border-border">
+        <div className="flex items-center gap-2">
+          <Trophy size={13} className="text-primary" />
+          <span className="text-xs font-bold tracking-widest uppercase text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.15em" }}>Global Top 5</span>
+        </div>
+        <button onClick={() => setScreen("register")} className="flex items-center gap-1 text-[10px] tracking-widest text-primary uppercase hover:opacity-80 transition-opacity" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+          Join <ChevronRight size={10} />
+        </button>
+      </div>
+      <div className="divide-y divide-border">
+        {LEADERBOARD.map((user) => (
+          <div key={user.rank} className="px-5 py-2.5 flex items-center gap-3">
+            <span className={`text-xs font-bold w-5 text-center flex-shrink-0 ${user.rank === 1 ? "text-primary" : "text-muted-foreground"}`} style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+              {user.rank === 1 ? "01" : `0${user.rank}`}
+            </span>
+            <span className="flex-1 text-sm text-foreground font-medium tracking-wide" style={{ fontFamily: "'DM Sans', sans-serif" }}>{user.name}</span>
+            <div className="flex items-center gap-3">
+              <span className="text-[10px] text-muted-foreground tracking-wider" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{user.accuracy}</span>
+              <span className={`text-xs font-semibold ${user.rank === 1 ? "text-primary" : "text-foreground"}`} style={{ fontFamily: "'JetBrains Mono', monospace" }}>{user.pts.toLocaleString()}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="px-5 py-3 bg-muted/20 border-t border-border">
+        <button onClick={() => setScreen("register")} className="w-full text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors text-center" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+          Sign up to claim your spot
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function LandingScreen({ setScreen }: { setScreen: (s: Screen) => void }) {
+  return (
+    <main className="min-h-screen pt-14 bg-background">
+      <section className="relative overflow-hidden border-b border-border">
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(57,255,20,0.5) 39px, rgba(57,255,20,0.5) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(57,255,20,0.5) 39px, rgba(57,255,20,0.5) 40px)` }} />
+        <div className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none" style={{ background: "linear-gradient(to bottom, transparent, #0b0d0b)" }} />
+        <div className="relative max-w-5xl mx-auto px-6 md:px-10 pt-16 pb-20 md:pt-24 md:pb-28">
+          <div className="inline-flex items-center gap-2 mb-8 px-3 py-1 border border-primary/30 bg-primary/5">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            <span className="text-[10px] tracking-widest text-primary uppercase font-semibold" style={{ fontFamily: "'JetBrains Mono', monospace" }}>2024/25 Season · GW38 Predictions Open</span>
+          </div>
+          <h1 className="text-5xl sm:text-7xl md:text-8xl font-black text-foreground leading-none tracking-tight uppercase mb-6 max-w-3xl" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+            Predict the <span className="text-primary">Premier</span><br />
+            League. <span className="relative inline-block" style={{ WebkitTextStroke: "1px rgba(57,255,20,0.4)", color: "transparent" }}>Claim</span> the<br />Leaderboard.
+          </h1>
+          <p className="text-base md:text-lg text-muted-foreground max-w-md mb-10 leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
+            Predict every EPL fixture. Earn points for accuracy. Rise through the global ranks. Weekly prizes for the sharpest football minds.
+          </p>
+          <div className="flex flex-wrap items-center gap-4">
+            <button onClick={() => setScreen("register")} className="group flex items-center gap-3 px-7 py-3.5 bg-primary text-primary-foreground font-bold tracking-widest uppercase text-sm hover:opacity-90 transition-all active:scale-[0.98]" style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.15em" }}>
+              Sign Up Now <ChevronRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
+            </button>
+            <button onClick={() => setScreen("login")} className="px-7 py-3.5 border border-border text-foreground font-bold tracking-widest uppercase text-sm hover:border-primary/40 transition-colors" style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.15em" }}>
+              Log In
+            </button>
+          </div>
+          <div className="mt-10 flex items-center gap-6 flex-wrap">
+            {[["48K+", "Active Predictors"], ["£10K", "Monthly Prize Pool"], ["380", "Fixtures / Season"]].map(([num, label]) => (
+              <div key={label} className="flex items-baseline gap-2">
+                <span className="text-2xl font-black text-primary" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>{num}</span>
+                <span className="text-xs text-muted-foreground tracking-wider uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      <section className="max-w-5xl mx-auto px-6 md:px-10 py-14">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-1 h-5 bg-primary" />
+            <h2 className="text-xl font-bold tracking-widest uppercase text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}>Upcoming Fixtures</h2>
+          </div>
+          <span className="text-[10px] tracking-widest text-muted-foreground uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>GW38 · Preview Mode</span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
+          {MATCHES.map((m) => <MatchCard key={m.id} match={m} />)}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="md:col-span-1">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-1 h-5 bg-primary" />
+              <h2 className="text-xl font-bold tracking-widest uppercase text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}>Leaderboard</h2>
+            </div>
+            <LeaderboardWidget setScreen={setScreen} />
+          </div>
+          <div className="md:col-span-2 flex flex-col justify-between bg-card border border-border p-6 md:p-8">
+            <div>
+              <div className="text-4xl md:text-5xl font-black text-foreground uppercase leading-tight mb-4" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                Every Goal.<br /><span className="text-primary">Every Point.</span><br />Your Reputation.
+              </div>
+              <p className="text-muted-foreground text-sm leading-relaxed max-w-sm" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
+                Make predictions before kickoff, score points based on accuracy — exact scores, correct outcomes, goal margins. Track your position in real-time against the world.
+              </p>
+            </div>
+            <button onClick={() => setScreen("register")} className="mt-8 self-start flex items-center gap-3 px-6 py-3 bg-primary text-primary-foreground font-bold tracking-widest uppercase text-sm hover:opacity-90 transition-opacity" style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.15em" }}>
+              Start Predicting <ChevronRight size={14} />
+            </button>
+          </div>
+        </div>
+      </section>
+      <footer className="border-t border-border px-6 md:px-10 py-6 flex flex-wrap items-center justify-between gap-3 max-w-5xl mx-auto">
+        <div className="flex items-center gap-2">
+          <Zap size={13} className="text-primary" fill="currentColor" />
+          <span className="text-xs tracking-widest text-muted-foreground uppercase" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>PremPredict © 2025</span>
+        </div>
+        <span className="text-[10px] text-muted-foreground/50 tracking-widest uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Not affiliated with the Premier League</span>
+      </footer>
+    </main>
+  );
+}
+
+function AuthField({ label, type, placeholder, value, onChange, showToggle }: {
+  label: string; type: string; placeholder: string; value: string;
+  onChange: (v: string) => void; showToggle?: boolean;
+}) {
+  const [visible, setVisible] = useState(false);
+  const inputType = showToggle ? (visible ? "text" : "password") : type;
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="text-[10px] tracking-widest uppercase text-muted-foreground font-semibold" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{label}</label>
+      <div className="relative">
+        <input type={inputType} placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)}
+          className="w-full bg-muted border border-border px-4 py-3 text-foreground text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/20 transition-all"
+          style={{ fontFamily: "'DM Sans', sans-serif" }} />
+        {showToggle && (
+          <button type="button" onClick={() => setVisible((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+            {visible ? <EyeOff size={15} /> : <Eye size={15} />}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function LoginScreen({ setScreen }: { setScreen: (s: Screen) => void }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    navigate("/dashboard");
+  };
+
+  return (
+    <main className="min-h-screen pt-14 bg-background flex items-center justify-center px-4">
+      <div className="w-full max-w-sm">
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-6">
+            <div className="w-1 h-6 bg-primary" />
+            <span className="text-2xl font-black tracking-widest uppercase text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}>Welcome Back</span>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>Log in to your account and get back to predicting.</p>
+        </div>
+        <form className="flex flex-col gap-4" onSubmit={handleLogin}>
+          <AuthField label="Email Address" type="email" placeholder="you@example.com" value={email} onChange={setEmail} />
+          <AuthField label="Password" type="password" placeholder="••••••••" value={password} onChange={setPassword} showToggle />
+          <div className="flex justify-end mt-1">
+            <button type="button" className="text-xs text-primary hover:opacity-80 transition-opacity" style={{ fontFamily: "'DM Sans', sans-serif" }}>Forgot Password?</button>
+          </div>
+          <button type="submit" className="mt-2 w-full py-3.5 bg-primary text-primary-foreground font-bold tracking-widest uppercase text-sm hover:opacity-90 transition-opacity active:scale-[0.99]" style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.15em" }}>Log In</button>
+        </form>
+        <div className="mt-8 pt-6 border-t border-border text-center">
+          <span className="text-sm text-muted-foreground" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>No account yet? </span>
+          <button onClick={() => setScreen("register")} className="text-sm text-primary hover:opacity-80 transition-opacity font-medium" style={{ fontFamily: "'DM Sans', sans-serif" }}>Sign up for free</button>
+        </div>
+        <div className="mt-6 p-4 bg-card border border-border">
+          <div className="flex items-center gap-2 mb-2">
+            <Trophy size={11} className="text-primary" />
+            <span className="text-[10px] tracking-widest text-primary uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Current leader</span>
+          </div>
+          <div className="text-sm text-foreground font-semibold" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+            xavi_prophet <span className="text-muted-foreground font-normal">· 3,842 pts · 71% accuracy</span>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function RegisterScreen({ setScreen }: { setScreen: (s: Screen) => void }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const passwordMatch = confirm === "" || password === confirm;
+  const navigate = useNavigate();
+
+  const handleRegister = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordMatch && password !== "" && email !== "") navigate("/dashboard");
+  };
+
+  return (
+    <main className="min-h-screen pt-14 bg-background flex items-center justify-center px-4">
+      <div className="w-full max-w-sm">
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-6">
+            <div className="w-1 h-6 bg-primary" />
+            <span className="text-2xl font-black tracking-widest uppercase text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}>Create Account</span>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>Join 48,000+ predictors competing for leaderboard glory this season.</p>
+        </div>
+        <form className="flex flex-col gap-4" onSubmit={handleRegister}>
+          <AuthField label="Email Address" type="email" placeholder="you@example.com" value={email} onChange={setEmail} />
+          <AuthField label="Password" type="password" placeholder="min. 8 characters" value={password} onChange={setPassword} showToggle />
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] tracking-widest uppercase text-muted-foreground font-semibold" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Confirm Password</label>
+            <div className="relative">
+              <input type="password" placeholder="repeat password" value={confirm} onChange={(e) => setConfirm(e.target.value)}
+                className={`w-full bg-muted border px-4 py-3 text-foreground text-sm placeholder:text-muted-foreground/50 focus:outline-none transition-all ${!passwordMatch ? "border-destructive focus:border-destructive" : confirm !== "" && password === confirm ? "border-primary/50 focus:border-primary/60 focus:ring-1 focus:ring-primary/20" : "border-border focus:border-primary/60 focus:ring-1 focus:ring-primary/20"}`}
+                style={{ fontFamily: "'DM Sans', sans-serif" }} />
+              {confirm !== "" && password === confirm && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-primary text-xs">✓</span>}
+            </div>
+            {!passwordMatch && <span className="text-[10px] text-destructive tracking-wider" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Passwords do not match</span>}
+          </div>
+          <div className="mt-1 flex flex-col gap-2">
+            <div className="flex items-start gap-2.5">
+              <div className="w-3.5 h-3.5 mt-0.5 border border-border flex-shrink-0" />
+              <span className="text-xs text-muted-foreground leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
+                I agree to the <span className="text-primary cursor-pointer hover:opacity-80">Terms of Service</span> and <span className="text-primary cursor-pointer hover:opacity-80">Privacy Policy</span>
+              </span>
+            </div>
+          </div>
+          <button type="submit" disabled={!passwordMatch || password === "" || email === ""}
+            className="mt-2 w-full py-3.5 bg-primary text-primary-foreground font-bold tracking-widest uppercase text-sm hover:opacity-90 transition-opacity active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.15em" }}>Create Account</button>
+        </form>
+        <div className="mt-8 pt-6 border-t border-border text-center">
+          <span className="text-sm text-muted-foreground" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>Already have an account? </span>
+          <button onClick={() => setScreen("login")} className="text-sm text-primary hover:opacity-80 transition-opacity font-medium" style={{ fontFamily: "'DM Sans', sans-serif" }}>Log in</button>
+        </div>
+        <div className="mt-6 grid grid-cols-3 gap-px bg-border">
+          {[["Free", "Forever"], ["Live", "Updates"], ["Global", "Rankings"]].map(([top, bot]) => (
+            <div key={top} className="bg-card px-3 py-3 text-center">
+              <div className="text-sm font-bold text-primary" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>{top}</div>
+              <div className="text-[10px] text-muted-foreground tracking-wider uppercase mt-0.5" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{bot}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </main>
+  );
+}
+
+export default function AuthPage() {
+  const [screen, setScreen] = useState<Screen>("landing");
+  return (
+    <div className="min-h-screen bg-background">
+      <NavBar screen={screen} setScreen={setScreen} />
+      {screen === "landing" && <LandingScreen setScreen={setScreen} />}
+      {screen === "login" && <LoginScreen setScreen={setScreen} />}
+      {screen === "register" && <RegisterScreen setScreen={setScreen} />}
+    </div>
+  );
+}
