@@ -2,15 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router";
 import { Eye, EyeOff, Trophy, ChevronRight, Clock, Zap } from "lucide-react";
 
-// Import unified authApi alongside matching structural data types
+// Import API calls and types from our backend folder
 import { authApi, Match, LeaderboardUser } from "../api/index";
 
+// Define the 4 views/screens a user can see on this page
 type Screen = "landing" | "login" | "register" | "verify";
 
+/**
+ * NavBar Component:
+ * The top navigation bar that stays fixed at the top of the screen.
+ * Shows login/signup buttons on the landing page, or a "Back" button on auth pages.
+ */
 function NavBar({ screen, setScreen }: { screen: Screen; setScreen: (s: Screen) => void }) {
+  // Show the back button only on login, register, or verification screens
   const showBack = screen === "login" || screen === "register" || screen === "verify";
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 h-14 border-b border-border bg-background/90 backdrop-blur-sm">
+      {/*--- App Logo ---*/}
       <div className="flex items-center gap-2">
         <Zap size={16} className="text-primary" fill="currentColor" />
         <span
@@ -20,6 +28,8 @@ function NavBar({ screen, setScreen }: { screen: Screen; setScreen: (s: Screen) 
           PremPredict
         </span>
       </div>
+
+      {/* Buttons to show if we are on the home/landing page */}
       {screen === "landing" && (
         <div className="flex items-center gap-3">
           <button
@@ -38,6 +48,8 @@ function NavBar({ screen, setScreen }: { screen: Screen; setScreen: (s: Screen) 
           </button>
         </div>
       )}
+
+      {/* Back button to show if we are inside login/register/verify */}
       {showBack && (
         <button
           onClick={() => setScreen("landing")}
@@ -51,9 +63,15 @@ function NavBar({ screen, setScreen }: { screen: Screen; setScreen: (s: Screen) 
   );
 }
 
+/**
+ * MatchCard Component:
+ * Displays a single football match fixture with home/away teams, game info, and betting-style odds buttons.
+ */
 function MatchCard({ match }: { match: Match }) {
+  // Keeps track of what the user predicted ("home", "draw", "away", or nothing)
   const [prediction, setPrediction] = useState<"home" | "draw" | "away" | null>(null);
-
+  
+  // Handles clicking a prediction button. Clicking an already active button turns it off.
   const handlePrediction = async (type: "home" | "draw" | "away") => {
     const nextPrediction = prediction === type ? null : type;
     setPrediction(nextPrediction);
@@ -65,6 +83,7 @@ function MatchCard({ match }: { match: Match }) {
 
   return (
     <div className="bg-card border border-border flex flex-col gap-0 overflow-hidden group hover:border-primary/30 transition-colors duration-200">
+      {/* Top bar of the card: Time and Venue */}
       <div className="px-4 py-2.5 flex items-center justify-between border-b border-border bg-muted/30">
         <div className="flex items-center gap-1.5">
           <Clock size={11} className="text-muted-foreground" />
@@ -76,7 +95,10 @@ function MatchCard({ match }: { match: Match }) {
           {match.venue}
         </span>
       </div>
+
+      {/* Middle section: Team crests and names */}
       <div className="px-5 py-5 flex items-center justify-between gap-3">
+        {/* Home Team */}
         <div className="flex flex-col items-center gap-1.5 flex-1">
           <span className="text-2xl">{match.homeCrest}</span>
           <span className="text-base font-bold text-foreground tracking-wide text-center leading-tight" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
@@ -86,9 +108,12 @@ function MatchCard({ match }: { match: Match }) {
             {match.homeShort}
           </span>
         </div>
+
         <div className="flex flex-col items-center gap-1 flex-shrink-0">
           <span className="text-xl font-black text-muted-foreground/40" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>VS</span>
         </div>
+
+        {/* Away Team */}
         <div className="flex flex-col items-center gap-1.5 flex-1">
           <span className="text-2xl">{match.awayCrest}</span>
           <span className="text-base font-bold text-foreground tracking-wide text-center leading-tight" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
@@ -99,6 +124,8 @@ function MatchCard({ match }: { match: Match }) {
           </span>
         </div>
       </div>
+
+      {/* Bottom section: Prediction buttons (Home win, Draw, Away win) */}
       <div className="px-4 pb-4 grid grid-cols-3 gap-1.5">
         {(["home", "draw", "away"] as const).map((type) => {
           const label = type === "home" ? match.homeShort : type === "away" ? match.awayShort : "DRW";
@@ -117,9 +144,14 @@ function MatchCard({ match }: { match: Match }) {
   );
 }
 
+/**
+ * LeaderboardWidget Component:
+ * Shows a preview list of the top 5 players globally to encourage guests to sign up.
+ */
 function LeaderboardWidget({ leaderboard, setScreen }: { leaderboard: LeaderboardUser[]; setScreen: (s: Screen) => void }) {
   return (
     <div className="bg-card border border-border overflow-hidden">
+      {/* Header */}
       <div className="px-5 py-3 flex items-center justify-between border-b border-border">
         <div className="flex items-center gap-2">
           <Trophy size={13} className="text-primary" />
@@ -129,6 +161,8 @@ function LeaderboardWidget({ leaderboard, setScreen }: { leaderboard: Leaderboar
           Join <ChevronRight size={10} />
         </button>
       </div>
+
+      {/* List of top users */}
       <div className="divide-y divide-border">
         {leaderboard.map((user) => (
           <div key={user.rank} className="px-5 py-2.5 flex items-center gap-3">
@@ -143,6 +177,8 @@ function LeaderboardWidget({ leaderboard, setScreen }: { leaderboard: Leaderboar
           </div>
         ))}
       </div>
+
+      {/* Bottom CTA footer link */}
       <div className="px-5 py-3 bg-muted/20 border-t border-border">
         <button onClick={() => setScreen("register")} className="w-full text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors text-center" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
           Sign up to claim your spot
@@ -152,9 +188,14 @@ function LeaderboardWidget({ leaderboard, setScreen }: { leaderboard: Leaderboar
   );
 }
 
+/**
+ * LandingScreen Component:
+ * The main homepage presentation filled with marketing text, active live games, and leaderboard previews.
+ */
 function LandingScreen({ matches, leaderboard, setScreen }: { matches: Match[]; leaderboard: LeaderboardUser[]; setScreen: (s: Screen) => void }) {
   return (
     <main className="min-h-screen pt-14 bg-background">
+      {/* Hero Header Section */}
       <section className="relative overflow-hidden border-b border-border">
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(57,255,20,0.5) 39px, rgba(57,255,20,0.5) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(57,255,20,0.5) 39px, rgba(57,255,20,0.5) 40px)` }} />
         <div className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none" style={{ background: "linear-gradient(to bottom, transparent, #0b0d0b)" }} />
@@ -207,6 +248,8 @@ function LandingScreen({ matches, leaderboard, setScreen }: { matches: Match[]; 
           </div>
         </div>
       </section>
+
+      {/* Content Section: Fixtures & Leaderboard preview grids */}
       <section className="max-w-5xl mx-auto px-6 md:px-10 py-14">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -216,6 +259,7 @@ function LandingScreen({ matches, leaderboard, setScreen }: { matches: Match[]; 
           <span className="text-[10px] tracking-widest text-muted-foreground uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>GW38 · Live Feed</span>
         </div>
         
+        {/* Loading state or match cards mapping */}
         {matches.length === 0 ? (
           <div className="py-10 text-center text-xs text-muted-foreground animate-pulse font-mono uppercase">Syncing Live Fixtures...</div>
         ) : (
@@ -224,6 +268,7 @@ function LandingScreen({ matches, leaderboard, setScreen }: { matches: Match[]; 
           </div>
         )}
 
+        {/* Lower layout split: Leaderboard + Description Promo box */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-1">
             <div className="flex items-center gap-3 mb-4">
@@ -247,6 +292,8 @@ function LandingScreen({ matches, leaderboard, setScreen }: { matches: Match[]; 
           </div>
         </div>
       </section>
+
+      {/* Footer copyright info */}
       <footer className="border-t border-border px-6 md:px-10 py-6 flex flex-wrap items-center justify-between gap-3 max-w-5xl mx-auto">
         <div className="flex items-center gap-2">
           <Zap size={13} className="text-primary" fill="currentColor" />
@@ -258,11 +305,17 @@ function LandingScreen({ matches, leaderboard, setScreen }: { matches: Match[]; 
   );
 }
 
+/**
+ * AuthField Component:
+ * Reusable input element for our forms. Features a custom label and optional password view toggling.
+ */
 function AuthField({ label, type, placeholder, value, onChange, showToggle }: {
   label: string; type: string; placeholder: string; value: string;
   onChange: (v: string) => void; showToggle?: boolean;
 }) {
   const [visible, setVisible] = useState(false);
+
+  // Switch between password or standard text input based on visibility state
   const inputType = showToggle ? (visible ? "text" : "password") : type;
   return (
     <div className="flex flex-col gap-1.5">
@@ -271,6 +324,7 @@ function AuthField({ label, type, placeholder, value, onChange, showToggle }: {
         <input type={inputType} placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)}
           className="w-full bg-muted border border-border px-4 py-3 text-foreground text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/20 transition-all"
           style={{ fontFamily: "'DM Sans', sans-serif" }} />
+        {/* Toggle hide/show icon for password fields */}
         {showToggle && (
           <button type="button" onClick={() => setVisible((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
             {visible ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -281,6 +335,10 @@ function AuthField({ label, type, placeholder, value, onChange, showToggle }: {
   );
 }
 
+/**
+ * LoginScreen Component:
+ * Form view that authenticates existing user credentials.
+ */
 function LoginScreen({ leaderboard, setScreen }: { leaderboard: LeaderboardUser[]; setScreen: (s: Screen) => void }) {
   const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -290,6 +348,7 @@ function LoginScreen({ leaderboard, setScreen }: { leaderboard: LeaderboardUser[
 
   const topUser = leaderboard[0];
 
+  // Submit credentials to backend API login endpoint
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -301,7 +360,7 @@ function LoginScreen({ leaderboard, setScreen }: { leaderboard: LeaderboardUser[
       if (data.token) {
         localStorage.setItem("auth_token", data.token);
       }
-      navigate("/dashboard");
+      navigate("/dashboard"); // Redirect user to dashboard
     } catch (err: any) {
       console.error(err);
       setError(err.message || "Login connection context failed.");
@@ -349,6 +408,7 @@ function LoginScreen({ leaderboard, setScreen }: { leaderboard: LeaderboardUser[
           <button onClick={() => setScreen("register")} className="text-sm text-primary hover:opacity-80 transition-opacity font-medium" style={{ fontFamily: "'DM Sans', sans-serif" }}>Sign up for free</button>
         </div>
         
+        {/* Shows current global rank #1 user info if available */}
         {topUser && (
           <div className="mt-6 p-4 bg-card border border-border">
             <div className="flex items-center gap-2 mb-2">
@@ -365,6 +425,10 @@ function LoginScreen({ leaderboard, setScreen }: { leaderboard: LeaderboardUser[
   );
 }
 
+/**
+ * RegisterScreen Component:
+ * Form view that sets up account creation details for a new profile context.
+ */
 function RegisterScreen({ setScreen, onRegister }: { setScreen: (s: Screen) => void; onRegister: (email: string) => void }) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -374,8 +438,10 @@ function RegisterScreen({ setScreen, onRegister }: { setScreen: (s: Screen) => v
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // Simple validation checking if the typed password matches the confirmation string
   const passwordMatch = confirm === "" || password === confirm;
 
+  // Handles clicking the form submit registration trigger
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -385,8 +451,8 @@ function RegisterScreen({ setScreen, onRegister }: { setScreen: (s: Screen) => v
     try {
       await authApi.register({ firstName, lastName, username, email, password });
 
-      onRegister(email);
-      setScreen("verify");
+      onRegister(email);  // Save target email for verification step
+      setScreen("verify");  // Move onwards to verify setup stage
     } catch (err: any) {
       console.error(err);
       setError(err.message || "Could not register new member session profile.");
@@ -413,6 +479,8 @@ function RegisterScreen({ setScreen, onRegister }: { setScreen: (s: Screen) => v
           <AuthField label="Username" type="text" placeholder="john_doe" value={username} onChange={setUsername} />
           <AuthField label="Email Address" type="email" placeholder="you@example.com" value={email} onChange={setEmail} />
           <AuthField label="Password" type="password" placeholder="min. 8 characters" value={password} onChange={setPassword} showToggle />
+          
+          {/* Unique explicit confirm password field matching state layout check */}
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] tracking-widest uppercase text-muted-foreground font-semibold" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Confirm Password</label>
             <div className="relative">
@@ -455,12 +523,18 @@ function RegisterScreen({ setScreen, onRegister }: { setScreen: (s: Screen) => v
   );
 }
 
+
+/**
+ * VerifyScreen Component:
+ * Confirms registration by taking a 6-digit confirmation pin sent to the user email inbox.
+ */
 function VerifyScreen({ email, setScreen }: { email: string; setScreen: (s: Screen) => void }) {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  // Code verification network submittal
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -484,6 +558,7 @@ function VerifyScreen({ email, setScreen }: { email: string; setScreen: (s: Scre
     }
   };
 
+  // Re-sends validation email code context
   const handleResend = async () => {
     try {
       await authApi.resendCode(email);
@@ -513,6 +588,7 @@ function VerifyScreen({ email, setScreen }: { email: string; setScreen: (s: Scre
               maxLength={6}
               placeholder="e.g. 123456"
               value={code}
+              // Only allows typing numbers and limits length to 6 characters
               onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
               className="w-full bg-muted border border-border px-4 py-3 text-foreground text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/20 transition-all text-center tracking-widest font-mono"
               style={{ fontFamily: "'JetBrains Mono', monospace" }}
@@ -538,12 +614,20 @@ function VerifyScreen({ email, setScreen }: { email: string; setScreen: (s: Scre
   );
 }
 
+/**
+ * Main Export AuthPage Component:
+ * Controls state routing for which view to render, and handles pulling live preview data from backend.
+ */
 export default function AuthPage() {
   const [screen, setScreen] = useState<Screen>("landing");
   const [matches, setMatches] = useState<Match[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
   const [registeredEmail, setRegisteredEmail] = useState("");
 
+  /**
+   * Data Hook Effect:
+   * Fetches preview live games and scoreboard data at the same time whenever a user returns to the landing view.
+   */
   useEffect(() => {
     async function fetchPremData() {
       try {

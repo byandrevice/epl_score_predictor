@@ -22,7 +22,7 @@ interface Fixture {
   competition: string;
   week: string;
   status: string;
-  predicted: boolean;
+  predicted: boolean; // Flag evaluating if the active profile has entry row values saved for this item
   predictedHomeScore?: string | number;
   predictedAwayScore?: string | number;
 }
