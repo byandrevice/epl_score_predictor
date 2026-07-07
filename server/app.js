@@ -6,6 +6,7 @@ const fixtureRoutes = require("./routes/fixtureRoutes");
 const predictionRoutes = require("./routes/predictionRoutes");
 const leaderboardRoutes = require("./routes/leaderboardRoutes");
 const demoRoutes = require("./routes/demoRoutes");
+const userRoutes = require("./routes/userRoutes");
 const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
@@ -21,6 +22,7 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "OK" });
 });
 
+app.use("/api/user", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/fixtures", fixtureRoutes);
 app.use("/api/predictions", predictionRoutes);

@@ -26,11 +26,24 @@ exports.register = async (req, res, next) => {
     }
 
     const existing = await User.findOne({
-      $or: [{ email: email.toLowerCase() }, { username }],
+      $or: [{ email: email.toLowerCase() }, { username }]
     });
+
     if (existing) {
-      return res.status(409).json({ success: false, message: "An account with that email or user already exists."});
+
+      if (!existing.isVerified) {
+        await User.deleteOne({ _id: existing._id });
+      } else {
+        return res.status(409).json({
+          success: false,
+          message: "Email or username already exists."
+        });
+      }
     }
+
+    const verificationCode = Math.floor(
+      100000 + Math.random() * 9000
+    ).toString();
 
     const user = new User({
       firstName,
@@ -38,6 +51,7 @@ exports.register = async (req, res, next) => {
       username,
       email: email.toLowerCase(),
       password,
+      verificationCode,
     });
 
     await user.save(); // Write the new user to the database. Before this line runs, user only exists in memory (in the server's code)
@@ -45,6 +59,8 @@ exports.register = async (req, res, next) => {
                        // await matters here because .save() ia asynchronous-talking to a database takes time, so Node doesn't not freeze and wait by defult.
                        // await tell the code "pause this function right here until the save actually finishes" before moving on to the next line.
                        // Without await, the code might try to respond to the request before the user is actually saved.
+    
+    console.log("Verification Code:", verificationCode);
 
     return res.status(201).json({ success: true, message: "Account created." });
   } catch (err) { // If anything inside try throws an error, grab that error here instead of letting it crash the server.
