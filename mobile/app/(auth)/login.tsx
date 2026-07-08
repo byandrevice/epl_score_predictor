@@ -6,7 +6,7 @@ import {
 import {useRouter} from 'expo-router';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
-import { Theme } from '@/constants/theme';
+import { Theme, FontFamily } from '@/constants/theme';
 import { AuthField } from '@/components/AuthField';
 import { login } from '@/api/auth';
 import { useAuth } from '@/context/AuthContext';
@@ -142,27 +142,27 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   accentBar: { width: 4, height: 26, backgroundColor: Theme.colors.primary }, // the green tick
   heading: {
-    fontSize: 26, fontWeight: '800', color: Theme.colors.foreground,
+    fontSize: 26, fontFamily: FontFamily.display, color: Theme.colors.foreground,
     textTransform: 'uppercase', letterSpacing: 2,
   },
-  subtitle: { fontSize: 14, color: Theme.colors.mutedForeground, marginBottom: 28, lineHeight: 20 },
+  subtitle: { fontSize: 14, color: Theme.colors.mutedForeground, marginBottom: 28, lineHeight: 20, fontFamily: FontFamily.body },
   form: { gap: 16 }, // consistent spacing between fields/buttons
-  error: { color: Theme.colors.destructive, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 },
+  error: { color: Theme.colors.destructive, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, fontFamily: FontFamily.mono },
   forgot: { alignSelf: 'flex-end' }, // right-align just this row
-  forgotText: { color: Theme.colors.primary, fontSize: 13 },
+  forgotText: { color: Theme.colors.primary, fontSize: 13, fontFamily: FontFamily.body },
   button: {
     backgroundColor: Theme.colors.primary, paddingVertical: 15,
     alignItems: 'center', borderRadius: Theme.radius.sm, marginTop: 4,
   },
   buttonText: {
-    color: Theme.colors.primaryForeground, fontWeight: '700',
-    textTransform: 'uppercase', letterSpacing: 1.5, fontSize: 14,
+    color: Theme.colors.primaryForeground, fontFamily: FontFamily.display,
+    textTransform: 'uppercase', letterSpacing: 1.5, fontSize: 15,
   },
   footer: {
     flexDirection: 'row', justifyContent: 'center', marginTop: 28,
     paddingTop: 24, borderTopWidth: 1, borderTopColor: Theme.colors.border,
   },
-  footerText: { color: Theme.colors.mutedForeground, fontSize: 14 },
-  link: { color: Theme.colors.primary, fontSize: 14, fontWeight: '600' },
+  footerText: { color: Theme.colors.mutedForeground, fontSize: 14, fontFamily: FontFamily.body },
+  link: { color: Theme.colors.primary, fontSize: 14, fontFamily: FontFamily.body },
 });
 
