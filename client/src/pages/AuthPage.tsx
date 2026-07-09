@@ -149,6 +149,9 @@ function MatchCard({ match }: { match: Match }) {
  * Shows a preview list of the top 5 players globally to encourage guests to sign up.
  */
 function LeaderboardWidget({ leaderboard, setScreen }: { leaderboard: LeaderboardUser[]; setScreen: (s: Screen) => void }) {
+  if (!Array.isArray(leaderboard)) {
+    return <div className="text-muted-foreground text-xs">No leaderboard data available.</div>;
+  }
   return (
     <div className="bg-card border border-border overflow-hidden">
       {/* Header */}
@@ -218,24 +221,6 @@ function LandingScreen({ matches, leaderboard, setScreen }: { matches: Match[]; 
             <button onClick={() => setScreen("login")} className="px-7 py-3.5 border border-border text-foreground font-bold tracking-widest uppercase text-sm hover:border-primary/40 transition-colors" style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.15em" }}>
               Log In
             </button>
-
-            {/*******************************************************************************
-             * 🚨 REMOVE BEFORE PRODUCTION / DEPLOYMENT 🚨
-             * DEVELOPMENT BYPASS QUICK ACCESS BUTTON
-             ******************************************************************************/}
-            {((import.meta as any).env?.DEV) && (
-              <button 
-                onClick={() => {
-                  localStorage.setItem("auth_token", "dev_bypass_mock_token");
-                  window.location.href = "/dashboard";
-                }} 
-                className="px-5 py-3.5 bg-yellow-500/10 border border-yellow-500/30 text-yellow-500 text-xs font-bold tracking-widest uppercase hover:bg-yellow-500/20 transition-all active:scale-[0.99]"
-                style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}
-              >
-                ⚡ Dev Bypass (Skip Login)
-              </button>
-            )}
-            {/******************************************************************************/}
 
           </div>
           <div className="mt-10 flex items-center gap-6 flex-wrap">

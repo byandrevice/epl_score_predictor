@@ -4,6 +4,7 @@
 
 const jwt = require("jsonwebtoken"); // A library for creating and verifying JWTs (JSON Web Tokens)-the "ticket" that proves someone is logged in.
 const User = require("../models/User"); // This file can look up and create user records.
+const { sendVerificationEmail } = require("../services/emailService"); // sendVerificationEmail
 
 function signToken(user) { // Helper function, produces a login token for that user.
                            // When someone logs in successfully you call this function, and it hands back a long encoded string (the JWT).
@@ -60,9 +61,9 @@ exports.register = async (req, res, next) => {
                        // await tell the code "pause this function right here until the save actually finishes" before moving on to the next line.
                        // Without await, the code might try to respond to the request before the user is actually saved.
     
-    console.log("Verification Code:", verificationCode);
+    await sendVerificationEmail(email, verificationCode);
 
-    return res.status(201).json({ success: true, message: "Account created." });
+    return res.status(201).json({ success: true, message: "Account created. Please check your email for the verification code." });
   } catch (err) { // If anything inside try throws an error, grab that error here instead of letting it crash the server.
     next(err); 
     // Handing the caught error off to Express's error-handling middleware(the errorHandler.js file)-which format into a proper JSON error response for the client.
