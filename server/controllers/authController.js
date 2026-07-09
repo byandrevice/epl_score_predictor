@@ -42,7 +42,7 @@ exports.register = async (req, res, next) => {
     }
 
     const verificationCode = Math.floor(
-      100000 + Math.random() * 9000
+      100000 + Math.random() * 900000
     ).toString();
 
     const user = new User({
