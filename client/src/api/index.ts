@@ -219,3 +219,25 @@ export const authApi = {
     return response.json();
   }
 };
+
+// Add this to the bottom of client/src/api/index.ts
+
+// client/src/api/index.ts
+
+export const teamApi = {
+  getTeamDetails: async (teamId: string, token: string): Promise<any> => {
+    const response = await fetch(`${getBaseUrl()}/teams/${teamId}`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to parse backend team metrics.");
+    }
+    return data.data; // Returns the database document item safely
+  }
+};

@@ -9,6 +9,8 @@ const demoRoutes = require("./routes/demoRoutes");
 const userRoutes = require("./routes/userRoutes");
 const errorHandler = require("./middleware/errorHandler");
 
+const teamRoutes = require('./routes/teamRoutes');
+
 const app = express();
 
 app.use(cors());
@@ -28,6 +30,8 @@ app.use("/api/fixtures", fixtureRoutes);
 app.use("/api/predictions", predictionRoutes);
 app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/demo", demoRoutes);
+
+app.use('/api/teams', teamRoutes);
 
 // Central error handler (must be last).
 app.use(errorHandler);
