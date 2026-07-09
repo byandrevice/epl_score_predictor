@@ -5,7 +5,7 @@
 // Rules from [leader]'s proposal (confirm with the team before finalizing):
 //   goalError = |predictedHome - finalHome| + |predictedAway - finalAway|
 //
-//   Exact score (goalError = 0):                        5 pts
+//   Exact score (goalError = 0):                        7 pts
 //   Correct winner/draw, goalError = 1:                  3 pts
 //   Correct winner/draw, goalError = 2:                  2 pts
 //   Correct winner/draw, goalError >= 3:                 1 pt
@@ -26,7 +26,7 @@ exports.calculatePoints = (prediction, finalHomeScore, finalAwayScore) => {
     Math.abs(homeScore - finalHomeScore) + Math.abs(awayScore - finalAwayScore);
 
   // goalError === 0 can only happen if both scores matched exactly
-  if (goalError === 0) return 5;
+  if (goalError === 0) return 7;
 
   const correctOutcome = outcome(homeScore, awayScore) === outcome(finalHomeScore, finalAwayScore);
 
