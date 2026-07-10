@@ -25,6 +25,7 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use("/api/user", userRoutes);
+
 app.use("/api/auth", authRoutes);
 app.use("/api/fixtures", fixtureRoutes);
 app.use("/api/predictions", predictionRoutes);

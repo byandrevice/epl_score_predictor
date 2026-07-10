@@ -2,11 +2,14 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 const Prediction = require("../models/Prediction");
+const authMiddleware = require("../middleware/auth");
+
+const mongoose = require("mongoose");
 
 // Route to get Profile
-router.get("/profile", async (req, res) => {
+router.get("/profile", authMiddleware, async (req, res) => {
     try {
-        const user = await User.findOne();
+        const user = await User.findById(req.user.id); // Find by specific ID
         if (!user) return res.status(404).json({ message: "User not found" });
 
         // Manually map the data
@@ -22,36 +25,42 @@ router.get("/profile", async (req, res) => {
         };
 
         res.json(profileData);
-    } catch (err) {
+    } catch (err) { // <--- Correct syntax
         res.status(500).json({ message: "Server error" });
     }
 });
 
 // Route to get Stats
-router.get("/stats", async (req, res) => {
+router.get("/stats", authMiddleware, async (req, res) => {
     try {
-        // 1. Get the current user (Note: Ensure your auth middleware is used)
-        // For testing, if you don't have auth middleware, use a specific ID:
-        const userId = "6a500d4c962b5ac47ddfb113"; 
+        // Cast ID to ObjectId for reliable database matching[cite: 3]
+        const userId = new mongoose.Types.ObjectId(req.user.id); 
 
-        // 2. Fetch all predictions for this user
-        const predictions = await Prediction.find({ user: userId });
+        const allPredictions = await Prediction.aggregate([
+            { $group: { _id: "$user", totalPoints: { $sum: "$pointsAwarded" } } },
+            { $sort: { totalPoints: -1 } }
+        ]);
 
-        // 3. Calculate metrics
-        const totalPoints = predictions.reduce((sum, p) => sum + (p.pointsAwarded || 0), 0);
-        const predictionsMade = predictions.length;
-        const correctScores = predictions.filter(p => p.isCorrect).length;
-        const accuracy = predictionsMade > 0 
-            ? `${Math.round((correctScores / predictionsMade) * 100)}%` 
-            : "0%";
+        const rankIndex = allPredictions.findIndex(p => p._id.toString() === req.user.id);
+        const rank = rankIndex !== -1 ? rankIndex + 1 : "Unranked";
 
-        // 4. Return the dynamic data
+        const userPredictions = await Prediction.find({ user: userId }).sort({ createdAt: -1 });
+        const totalPoints = userPredictions.reduce((sum, p) => sum + (p.pointsAwarded || 0), 0);
+        const predictionsMade = userPredictions.length;
+        const correctScores = userPredictions.filter(p => p.isCorrect).length;
+        
+        // Simple streak logic: count consecutive correct predictions
+        let currentStreak = 0;
+        for (let p of userPredictions) {
+            if (p.isCorrect) currentStreak++;
+            else break;
+        }
+
         res.json({
-            rank: "1", // You can later implement a rank calculation
+            rank,
             points: totalPoints,
-            accuracy: accuracy,
-            correctScores: correctScores,
-            predictionsMade: predictionsMade
+            accuracy: predictionsMade > 0 ? `${Math.round((correctScores / predictionsMade) * 100)}%` : "0%",
+            streak: `${currentStreak}W` // Dynamic streak value[cite: 3]
         });
     } catch (err) {
         console.error(err);

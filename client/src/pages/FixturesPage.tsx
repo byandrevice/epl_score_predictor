@@ -42,7 +42,7 @@ export default function FixturesPage() {
   // Live Data State Management
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
-  const [userStats, setUserStats] = useState({ rank: "—", points: 0, accuracy: "58%" });
+  const [userStats, setUserStats] = useState({ rank: "—", points: 0, accuracy: "%" });
   const [loading, setLoading] = useState(true);
 
   const BACKEND_URL = "http://localhost:5001/api";
@@ -53,37 +53,53 @@ export default function FixturesPage() {
       try {
         const userData = JSON.parse(localStorage.getItem('user_data') || '{}');
         const userId = userData.id || "guest";
-    
+        const token = localStorage.getItem("auth_token"); // Get token for auth
+  
+        // Ensure token exists before fetching to avoid 401 errors
+        if (!token) {
+          console.error("No auth token found");
+          setLoading(false);
+          return;
+        }
+  
+        const headers = {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        };
+  
         // Perform individual fetches to prevent one failure from blocking others
         const [fixturesRes, leaderboardRes, profileRes] = await Promise.allSettled([
-          fetch(`${BACKEND_URL}/fixtures?week=${activeFilter}&userId=${userId}`),
-          fetch(`${BACKEND_URL}/leaderboard/top`),
-          fetch(`${BACKEND_URL}/user-stats?userId=${userId}`)
+          fetch(`${BACKEND_URL}/fixtures?week=${activeFilter}&userId=${userId}`, { headers }),
+          fetch(`${BACKEND_URL}/leaderboard?scope=Overall`, { headers }),
+          fetch(`${BACKEND_URL}/user/stats?userId=${userId}`, { headers })
         ]);
-    
+  
         // Check status for each
         if (fixturesRes.status === 'fulfilled' && fixturesRes.value.ok) {
-           setFixtures(await fixturesRes.value.json());
+          const data = await fixturesRes.value.json();
+          console.log("Fixtures received:", data); // Check if 'predicted' is true on any items
+          setFixtures(data);
         }
-        
+  
         if (leaderboardRes.status === 'fulfilled' && leaderboardRes.value.ok) {
-           const data = await leaderboardRes.value.json();
-           setLeaderboard(data.users || []); // Ensure you access the correct property
+          const data = await leaderboardRes.value.json();
+          const topFive = (data.users || []).slice(0, 5);
+          setLeaderboard(topFive);
         }
-        
+  
         if (profileRes.status === 'fulfilled' && profileRes.value.ok) {
-           setUserStats(await profileRes.value.json());
+          setUserStats(await profileRes.value.json());
         }
-    
+  
       } catch (err) {
         console.error("Dashboard fetch error:", err);
       } finally {
-        setLoading(false);
+        setLoading(false); // Stop loading regardless of success or failure
       }
     }
-
+  
     fetchDashboardData();
-  }, [activeFilter]);
+  }, [activeFilter]); // Re-runs whenever the user changes the filter
 
   if (loading) {
     return (
@@ -373,9 +389,9 @@ function SidebarPanels({ leaderboard, userStats, fixtures }: { leaderboard: Lead
         <div className="grid grid-cols-2 divide-x divide-y divide-border">
           {[
             { label: "Predicted", value: `${totalPredicted} / ${fixtures.length}`, sub: "fixtures" },
-            { label: "Points", value: userStats.points || 0, sub: "this week" }, // Dynamic
-            { label: "Accuracy", value: userStats.accuracy || "0%", sub: "season avg" }, // Dynamic
-            { label: "Streak", value: "4W", sub: "correct row" }, // If you have a streak field in your DB, use it here
+            { label: "Points", value: userStats.points || 0, sub: "this week" },
+            { label: "Accuracy", value: userStats.accuracy || "0%", sub: "season avg" },
+            { label: "Streak", value: userStats.streak || "0W", sub: "correct row" },
           ].map(({ label, value, sub }) => (
             <div key={label} className="px-4 py-4 flex flex-col gap-1">
               <span className="text-[10px] text-muted-foreground uppercase">{label}</span>

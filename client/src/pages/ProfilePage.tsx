@@ -73,12 +73,8 @@ export default function ProfilePage() {
 
         // Using Promise.all allows both requests to happen at the same time
         const [profileRes, statsRes] = await Promise.all([
-          fetch(`${BACKEND_URL}/user/profile`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch(`${BACKEND_URL}/user/stats`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
+          fetch(`${BACKEND_URL}/user/profile`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${BACKEND_URL}/user/stats`, { headers: { Authorization: `Bearer ${token}` } }),
         ]);
 
         if (!profileRes.ok || !statsRes.ok) {
