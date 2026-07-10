@@ -57,7 +57,7 @@ export default function FixturesPage() {
         // Real API Calls 
         const [fixturesRes, leaderboardRes, profileRes] = await Promise.all([
           fetch(`${BACKEND_URL}/fixtures?week=${activeFilter}&userId=${userId}`),
-          fetch(`${BACKEND_URL}/leaderboard`),
+          fetch(`${BACKEND_URL}/leaderboard/top`), 
           fetch(`${BACKEND_URL}/user-stats?userId=${userId}`)
         ]);
 
@@ -70,91 +70,10 @@ export default function FixturesPage() {
         const profileData = await profileRes.json();
 
         setFixtures(fixturesData);
-        setLeaderboard(leaderboardData);
+        setLeaderboard(leaderboardData.users);
         setUserStats(profileData);
       } catch (err: any) {
-        
-        /*******************************************************************************
-         * 🚨 API READY ACTION ITEMS & FALLBACK OVERVIEW:
-         * * WHAT TO DO AFTER THE API IS READY:
-         * 1. Ensure your backend provides accuracy fields ("68%", etc.) and trend symbols ("up", "down", "same") 
-         * within the individual leaderboard array nodes.
-         * 2. Ensure your backend returns the custom fields 'predictedHomeScore' and 'predictedAwayScore' 
-         * when a fixture's 'predicted' state evaluates to true.
-         * 3. Once your live environment is ready, you can completely safely strip away this entire 'catch' 
-         * interceptor block so your UI falls back natively to your production global boundary errors.
-         ******************************************************************************/
-        
-        console.warn("Backend server not detected. Injecting local high-fidelity design mock variables.");
-        
-        setFixtures([
-          {
-            id: 1,
-            home: "Arsenal",
-            homeShort: "ARS",
-            homeCrest: "🔴",
-            homeColor: "#EF0107",
-            away: "Chelsea",
-            awayShort: "CHE",
-            awayCrest: "🔵",
-            awayColor: "#034694",
-            date: "Sat 5 Jul 2025",
-            time: "12:30",
-            venue: "Emirates Stadium",
-            competition: "Premier League",
-            week: "GW38",
-            status: "upcoming",
-            predicted: false,
-          },
-          {
-            id: 2,
-            home: "Liverpool",
-            homeShort: "LIV",
-            homeCrest: "🔴",
-            homeColor: "#C8102E",
-            away: "Man City",
-            awayShort: "MCI",
-            awayCrest: "🔵",
-            awayColor: "#6CABDD",
-            date: "Sat 5 Jul 2025",
-            time: "15:00",
-            venue: "Anfield",
-            competition: "Premier League",
-            week: "GW38",
-            status: "upcoming",
-            predicted: true,
-            predictedHomeScore: 2,
-            predictedAwayScore: 1
-          },
-          {
-            id: 3,
-            home: "Tottenham",
-            homeShort: "TOT",
-            homeCrest: "⚪",
-            homeColor: "#132257",
-            away: "Man United",
-            awayShort: "MUN",
-            awayCrest: "🔴",
-            awayColor: "#DA291C",
-            date: "Sun 6 Jul 2025",
-            time: "16:30",
-            venue: "Tottenham Hotspur Stadium",
-            competition: "Premier League",
-            week: "GW38",
-            status: "upcoming",
-            predicted: false,
-          }
-        ]);
-
-        setLeaderboard([
-          { rank: 1, name: "xavi_prophet", pts: 3842, accuracy: "71%", trend: "up" },
-          { rank: 2, name: "gunner_oracle", pts: 3710, accuracy: "68%", trend: "up" },
-          { rank: 3, name: "redzone_jamie", pts: 3588, accuracy: "66%", trend: "down" },
-          { rank: 4, name: "pitch_vision", pts: 3401, accuracy: "64%", trend: "same" },
-          { rank: 5, name: "klopp_disciple", pts: 3290, accuracy: "63%", trend: "up" },
-        ]);
-
-        setUserStats({ rank: "#2,104", points: 2180, accuracy: "58%" });
+        console.error("Failed to fetch dashboard data:", err);
       } finally {
         setLoading(false);
       }
