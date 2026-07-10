@@ -29,7 +29,15 @@ exports.getTop = async (req, res, next) => {
               if: { $gt: [{ $size: "$userPredictions" }, 0] },
               then: { 
                 $concat: [
-                  { $toString: { $multiply: [{ $divide: [{ $sum: "$userPredictions.isCorrect" }, { $size: "$userPredictions" }] }, 100] } },
+                  { $toString: { 
+                    $multiply: [
+                      { $divide: [
+                        { $sum: { $map: { input: "$userPredictions", as: "p", in: { $cond: ["$$p.isCorrect", 1, 0] } } } }, 
+                        { $size: "$userPredictions" }
+                      ] }, 
+                      100 
+                    ] 
+                  } },
                   "%"
                 ]
               },
@@ -43,15 +51,25 @@ exports.getTop = async (req, res, next) => {
     
     // 4. Map the results to add rankings and match your frontend's expected format
     const rankedUsers = leaderboard
-      .filter(user => user.name) // Only include users with names
-      .map((user, index) => ({
+    .filter(user => user.name)
+    .map((user, index) => {
+      // MOCK LOGIC:
+      // If rank is 1 (index 0), show "up". 
+      // If rank is 2 (index 1), show "down".
+      // All others show "same".
+      let mockTrend = "same";
+      if (index === 0) mockTrend = "up";
+      if (index === 1) mockTrend = "down";
+  
+      return {
         rank: index + 1,
         userId: user._id.toString(),
         name: user.name || "Anonymous",
         pts: user.pts || 0,
         accuracy: user.accuracy || "0%",
-        trend: "same", // Default trend status
-    }));
+        trend: mockTrend, // Uses the mock logic above
+      };
+    });
 
     // 5. Find the current user's profile for the sticky bar
     const currentUserData = rankedUsers.find(u => u.userId === currentUserId) || null;
