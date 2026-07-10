@@ -250,6 +250,7 @@ function ScorerRow({ scorer, primaryColor, primaryDim }: { scorer: Scorer; prima
 // ─── Page ──────────────────────────────────────────────────────────────────
 
 export default function TeamPage() {
+  console.log("TeamPage component has rendered!");
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
@@ -281,36 +282,43 @@ export default function TeamPage() {
 
   useEffect(() => {
     async function fetchTeamProfile() {
-      if (!id) return; // Guard clause if ID isn't ready
+      if (!id) {
+        console.log("TeamPage: No ID found in URL parameters");
+        return;
+      }
       
       try {
         setLoading(true);
         const token = localStorage.getItem("token") || "";
+        console.log("Fetching data for ID:", id); // Check if this logs
         
-        // 🔥 3. Pass the dynamic URL 'id' into your API call instead of hardcoded "ARS"
         const responseData = await teamApi.getTeamDetails(id.toUpperCase(), token);
+        
+        console.log("API Response Received:", responseData); // Check if this logs
         
         if (responseData) {
           setTeamProfile({
             clubData: {
-              ...responseData.club,
+              ...responseData.club, // This will pick up name, shortName, stadium, etc.
               primaryDim: `${responseData.club.primaryColor}1f`,
               primaryGlow: `${responseData.club.primaryColor}2d`,
               rankSuffix: responseData.club.rank === 1 ? "st" : responseData.club.rank === 2 ? "nd" : "rd"
             },
             formHistory: responseData.form || [],
             upcomingFixtures: responseData.upcoming || [],
-            topScorers: responseData.scorers || [],
-            statsSummary: responseData.stats || []
+            topScorers: responseData.scorers || [], // Matches the key in teamController
+            statsSummary: responseData.stats || []  // Matches the key in teamController
           });
         }
       } catch (error) {
-        console.error("Failed to fetch team dashboard profile:", error);
+        // THIS IS THE IMPORTANT PART
+        console.error("CRITICAL ERROR in fetchTeamProfile:", error); 
       } finally {
         setLoading(false);
+        console.log("Loading state set to false");
       }
     }
-
+  
     fetchTeamProfile();
   }, [id]);
 

@@ -4,4 +4,5 @@ const leaderboardController = require("../controllers/leaderboardController");
 
 router.get("/", leaderboardController.getTop);
 
+
 module.exports = router;

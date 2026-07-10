@@ -87,24 +87,26 @@ exports.getTeamProfile = async (req, res) => {
     // Construct unified context response structure
     res.json({
       success: true,
-      club: {
-        name: team.name,
-        shortName: team.shortName,
-        logoUrl: team.logoUrl,
-        stadium: team.stadium,
-        manager: team.manager,
-        capacity: team.capacity,
-        primaryColor: team.primaryColor,
-        played: playedMatches.length,
-        won, drawn, lost, gf, ga,
-        gd: gf - ga >= 0 ? `+${gf - ga}` : `${gf - ga}`,
-        pts: (won * 3) + drawn,
-        rank: targetId === "MCI" ? 1 : 2 // Placeholder placement standing values
-      },
-      form: recentForm,
-      upcoming: formattedUpcoming,
-      scorers: mockScorersByTeam[targetId] || [],
-      stats: mockStatsByTeam[targetId] || []
+      data: { // Wrap everything inside a 'data' object
+        club: {
+          name: team.name,
+          shortName: team.shortName,
+          logoUrl: team.logoUrl,
+          stadium: team.stadium,
+          manager: team.manager,
+          capacity: team.capacity,
+          primaryColor: team.primaryColor,
+          played: playedMatches.length,
+          won, drawn, lost, gf, ga,
+          gd: gf - ga >= 0 ? `+${gf - ga}` : `${gf - ga}`,
+          pts: (won * 3) + drawn,
+          rank: team.rank || 0
+        },
+        form: recentForm,
+        upcoming: formattedUpcoming,
+        scorers: team.topScorers || [], 
+        stats: team.statsSummary || []
+      }
     });
 
   } catch (error) {
