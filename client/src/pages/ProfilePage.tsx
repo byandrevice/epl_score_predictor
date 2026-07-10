@@ -59,6 +59,7 @@ export default function ProfilePage() {
   const BACKEND_URL = "http://localhost:5001/api";
 
   // --- 1. Fetch user account profile configurations ---
+  // --- 1. Fetch user account profile configurations ---
   useEffect(() => {
     async function fetchProfileAndStats() {
       setLoading(true);
@@ -70,6 +71,7 @@ export default function ProfilePage() {
           return;
         }
 
+        // Using Promise.all allows both requests to happen at the same time
         const [profileRes, statsRes] = await Promise.all([
           fetch(`${BACKEND_URL}/user/profile`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -80,62 +82,17 @@ export default function ProfilePage() {
         ]);
 
         if (!profileRes.ok || !statsRes.ok) {
-          throw new Error("Failed to sync personal credential vectors.");
+          throw new Error("Failed to fetch user data.");
         }
 
         const pData = await profileRes.json();
         const sData = await statsRes.json();
 
         setProfile(pData);
-        setDraft(pData);
+        setDraft(pData); // Important: Initialize draft with the fetched profile
         setStats(sData);
       } catch (err: any) {
-        
-        /*******************************************************************************
-         * 🚨 ATTENTION DEVELOPER: DELETE THIS ENTIRE BLOCK WHEN THE API IS READY 🚨
-         * * PURPOSE:
-         * This 'catch' block acts as a front-end safety net. Since your backend API team 
-         * hasn't started the live server yet, your fetch calls will naturally fail. 
-         * Instead of locking you out with a "Network Connection Error" screen, this block 
-         * intercepts the error and populates your UI layout fields with high-fidelity, 
-         * hardcoded mockup user profile stats and inputs.
-         * * WHEN TO DELETE:
-         * Remove this entire fallback catch block as soon as your local API server is online 
-         * and successfully serving JSON payloads from:
-         * - GET /api/user/profile
-         * - GET /api/user/stats
-         * * PRODUCTION STATUS: UNFIT FOR DEPLOYMENT (LOCAL TESTING ONLY)
-         ******************************************************************************/
-        
-        console.warn("Backend offline, utilizing development mockup arrays.");
-
-        const mockProfile: ProfileData = {
-          username: "DevTester_Bypass",
-          email: "developer@prempredict.io",
-          firstName: "Dev",
-          lastName: "Tester",
-          favoriteTeam: "Arsenal",
-          memberSince: "August 2025",
-          emailNotifications: true,
-          reminderNotifications: false
-        };
-
-        const mockStats: ProfileStats = {
-          rank: "#4,120",
-          points: 210,
-          accuracy: "52%",
-          correctScores: 14,
-          predictionsMade: 38
-        };
-
-        setProfile(mockProfile);
-        setDraft(mockProfile);
-        setStats(mockStats);
-
-        /*******************************************************************************
-         * END OF DEVMOCK INTERCEPTOR BLOCK
-         ******************************************************************************/
-
+        setError(err.message || "Something went wrong");
       } finally {
         setLoading(false);
       }
@@ -213,7 +170,10 @@ export default function ProfilePage() {
       <div className="bg-card rounded-xl border border-border p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center text-lg font-black">
-            {profile?.firstName?.[0] || profile?.username?.[0] || "U"}
+            {/* Combines the first letter of firstName and lastName */}
+            {(profile?.firstName?.[0] || "") + (profile?.lastName?.[0] || "") || 
+            profile?.username?.[0] || 
+            "U"}
           </div>
           <div>
             <h1
@@ -222,11 +182,8 @@ export default function ProfilePage() {
             >
               {profile?.firstName} {profile?.lastName}
             </h1>
-            <p
-              className="text-xs font-mono text-muted-foreground uppercase tracking-widest"
-              style={{ fontFamily: "'JetBrains Mono', monospace" }}
-            >
-              @{profile?.username} · Member Since {profile?.memberSince}
+            <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+              @{profile?.username} · Member Since {profile?.memberSince ? new Date(profile.memberSince).getFullYear() : "N/A"}
             </p>
           </div>
         </div>
