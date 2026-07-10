@@ -53,27 +53,30 @@ export default function FixturesPage() {
       try {
         const userData = JSON.parse(localStorage.getItem('user_data') || '{}');
         const userId = userData.id || "guest";
-
-        // Real API Calls 
-        const [fixturesRes, leaderboardRes, profileRes] = await Promise.all([
+    
+        // Perform individual fetches to prevent one failure from blocking others
+        const [fixturesRes, leaderboardRes, profileRes] = await Promise.allSettled([
           fetch(`${BACKEND_URL}/fixtures?week=${activeFilter}&userId=${userId}`),
-          fetch(`${BACKEND_URL}/leaderboard/top`), 
+          fetch(`${BACKEND_URL}/leaderboard/top`),
           fetch(`${BACKEND_URL}/user-stats?userId=${userId}`)
         ]);
-
-        if (!fixturesRes.ok || !leaderboardRes.ok || !profileRes.ok) {
-          throw new Error("Failed to receive server datasets.");
+    
+        // Check status for each
+        if (fixturesRes.status === 'fulfilled' && fixturesRes.value.ok) {
+           setFixtures(await fixturesRes.value.json());
         }
-
-        const fixturesData = await fixturesRes.json();
-        const leaderboardData = await leaderboardRes.json();
-        const profileData = await profileRes.json();
-
-        setFixtures(fixturesData);
-        setLeaderboard(leaderboardData.users);
-        setUserStats(profileData);
-      } catch (err: any) {
-        console.error("Failed to fetch dashboard data:", err);
+        
+        if (leaderboardRes.status === 'fulfilled' && leaderboardRes.value.ok) {
+           const data = await leaderboardRes.value.json();
+           setLeaderboard(data.users || []); // Ensure you access the correct property
+        }
+        
+        if (profileRes.status === 'fulfilled' && profileRes.value.ok) {
+           setUserStats(await profileRes.value.json());
+        }
+    
+      } catch (err) {
+        console.error("Dashboard fetch error:", err);
       } finally {
         setLoading(false);
       }
@@ -370,20 +373,14 @@ function SidebarPanels({ leaderboard, userStats, fixtures }: { leaderboard: Lead
         <div className="grid grid-cols-2 divide-x divide-y divide-border">
           {[
             { label: "Predicted", value: `${totalPredicted} / ${fixtures.length}`, sub: "fixtures" },
-            { label: "Points", value: "47", sub: "this week" },
-            { label: "Accuracy", value: userStats.accuracy || "58%", sub: "season avg" },
-            { label: "Streak", value: "4W", sub: "correct row" },
+            { label: "Points", value: userStats.points || 0, sub: "this week" }, // Dynamic
+            { label: "Accuracy", value: userStats.accuracy || "0%", sub: "season avg" }, // Dynamic
+            { label: "Streak", value: "4W", sub: "correct row" }, // If you have a streak field in your DB, use it here
           ].map(({ label, value, sub }) => (
             <div key={label} className="px-4 py-4 flex flex-col gap-1">
-              <span className="text-[10px] tracking-widest text-muted-foreground uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-                {label}
-              </span>
-              <span className="text-xl font-black text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-                {value}
-              </span>
-              <span className="text-[10px] text-muted-foreground/60" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-                {sub}
-              </span>
+              <span className="text-[10px] text-muted-foreground uppercase">{label}</span>
+              <span className="text-xl font-black text-foreground">{value}</span>
+              <span className="text-[10px] text-muted-foreground/60">{sub}</span>
             </div>
           ))}
         </div>

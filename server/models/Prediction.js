@@ -7,6 +7,7 @@ const predictionSchema = new mongoose.Schema(
     homeScore: { type: Number, required: true },
     awayScore: { type: Number, required: true },
     pointsAwarded: { type: Number, default: 0 },
+    isCorrect: { type: Boolean, default: false }, // Add this
   },
   { timestamps: true }
 );

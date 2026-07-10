@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const User = require("../models/User"); // Ensure you have this import
+const User = require("../models/User");
+const Prediction = require("../models/Prediction");
 
 // Route to get Profile
 router.get("/profile", async (req, res) => {
@@ -14,8 +15,10 @@ router.get("/profile", async (req, res) => {
             firstName: user.firstName,
             lastName: user.lastName,
             email: user.email,
-            // Fallback to a default date if createdAt is missing
-            memberSince: user.createdAt || new Date().toISOString() 
+            favoriteTeam: user.favoriteTeam || "",
+            emailNotifications: user.emailNotifications,
+            reminderNotifications: user.reminderNotifications,
+            memberSince: user.createdAt
         };
 
         res.json(profileData);
@@ -27,14 +30,31 @@ router.get("/profile", async (req, res) => {
 // Route to get Stats
 router.get("/stats", async (req, res) => {
     try {
+        // 1. Get the current user (Note: Ensure your auth middleware is used)
+        // For testing, if you don't have auth middleware, use a specific ID:
+        const userId = "6a500d4c962b5ac47ddfb113"; 
+
+        // 2. Fetch all predictions for this user
+        const predictions = await Prediction.find({ user: userId });
+
+        // 3. Calculate metrics
+        const totalPoints = predictions.reduce((sum, p) => sum + (p.pointsAwarded || 0), 0);
+        const predictionsMade = predictions.length;
+        const correctScores = predictions.filter(p => p.isCorrect).length;
+        const accuracy = predictionsMade > 0 
+            ? `${Math.round((correctScores / predictionsMade) * 100)}%` 
+            : "0%";
+
+        // 4. Return the dynamic data
         res.json({
-            rank: "N/A",
-            points: 0,
-            accuracy: "100%",           
-            correctScores: 0,         
-            predictionsMade: 0       
+            rank: "1", // You can later implement a rank calculation
+            points: totalPoints,
+            accuracy: accuracy,
+            correctScores: correctScores,
+            predictionsMade: predictionsMade
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ message: "Server error" });
     }
 });

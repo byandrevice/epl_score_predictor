@@ -11,9 +11,10 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true }, // store the hash, never plain text
     isVerified: { type: Boolean, default: false },
     verificationCode: { type: String },
-  },
-  { timestamps: true }
-);
+    favoriteTeam: { type: String, default: "" },
+    emailNotifications: { type: Boolean, default: true },
+    reminderNotifications: { type: Boolean, default: true },
+  }, { timestamps: true });
 
 // Runs automatically right before a document saves.
 // ONly re-hashes if the password field actually changed, so re-saving

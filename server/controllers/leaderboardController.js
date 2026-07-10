@@ -27,16 +27,20 @@ exports.getTop = async (req, res, next) => {
           accuracy: {
             $cond: {
               if: { $gt: [{ $size: "$userPredictions" }, 0] },
-              then: "0%", 
+              then: { 
+                $concat: [
+                  { $toString: { $multiply: [{ $divide: [{ $sum: "$userPredictions.isCorrect" }, { $size: "$userPredictions" }] }, 100] } },
+                  "%"
+                ]
+              },
               else: "0%"
             }
           }
         }
       },
-      // 3. Sort by highest points down to 0
       { $sort: { pts: -1, name: 1 } }
     ]);
-
+    
     // 4. Map the results to add rankings and match your frontend's expected format
     const rankedUsers = leaderboard
       .filter(user => user.name) // Only include users with names
