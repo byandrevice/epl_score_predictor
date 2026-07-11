@@ -11,4 +11,7 @@ router.get("/mine", auth, predictionController.getMine);
 router.get("/fixtures", auth, predictionController.getPredictFixtures);
 router.post("/submit-all", auth, predictionController.submitAll);
 
+// Used by StatsGallery.tsx (this user's graded prediction history + summary)
+router.get("/stats", auth, predictionController.getStats);
+
 module.exports = router;

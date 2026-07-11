@@ -62,7 +62,7 @@ exports.getMine = async (req, res, next) => {
         fixtureId: p.fixture._id.toString(), // available because of populate()
         homeScore: p.homeScore,
         awayScore: p.awayScore,
-        pointsAwarded: p.pointsAwarded, // ) until a fixture is graded
+        pointsAwarded: p.pointsAwarded, // 0 until a fixture is graded
       }))
     );
   } catch (err) {
@@ -188,6 +188,69 @@ exports.submitAll = async (req, res, next) => {
 
     const anyFailed = results.some((r) => !r.success);
     return res.status(anyFailed ? 207 : 200).json({ success: !anyFailed, results });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Powers the Stats page: this user's graded prediction history (with results
+// classified as exact/outcome/wrong) plus summary stats. Only fixtures with a
+// real final score count — ungraded predictions aren't "results" yet.
+exports.getStats = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+
+    const predictions = await Prediction.find({ user: userId }).populate("fixture");
+    const graded = predictions.filter(
+      (p) => p.fixture && p.fixture.finalHomeScore !== null && p.fixture.finalAwayScore !== null
+    );
+
+    const outcome = (h, a) => (h > a ? "HOME" : h < a ? "AWAY" : "DRAW");
+
+    const results = graded
+      .map((p) => {
+        const f = p.fixture;
+        const isExact = p.homeScore === f.finalHomeScore && p.awayScore === f.finalAwayScore;
+        const sameOutcome = outcome(p.homeScore, p.awayScore) === outcome(f.finalHomeScore, f.finalAwayScore);
+        const result = isExact ? "correct_score" : sameOutcome ? "correct_outcome" : "wrong";
+
+        return {
+          id: p._id.toString(),
+          homeTeam: f.home,
+          awayTeam: f.away,
+          homeCrest: f.homeCrest,
+          awayCrest: f.awayCrest,
+          finalHome: f.finalHomeScore,
+          finalAway: f.finalAwayScore,
+          predHome: p.homeScore,
+          predAway: p.awayScore,
+          result,
+          points: p.pointsAwarded,
+          matchDate: f.kickoff,
+          venue: f.venue,
+          week: f.week, // used below for "this gameweek", stripped from final output
+        };
+      })
+      .sort((a, b) => new Date(a.matchDate) - new Date(b.matchDate));
+
+    const totalPredictions = results.length;
+    const correctScores = results.filter((r) => r.result === "correct_score").length;
+    const anyPoints = results.filter((r) => r.result !== "wrong").length;
+    const seasonAccuracy = totalPredictions > 0 ? Math.round((anyPoints / totalPredictions) * 100) : 0;
+
+    // "Points this gameweek" = sum of points for the most recent graded week
+    let pointsThisGameweek = 0;
+    if (results.length > 0) {
+      const mostRecentWeek = results[results.length - 1].week;
+      pointsThisGameweek = results
+        .filter((r) => r.week === mostRecentWeek)
+        .reduce((sum, r) => sum + r.points, 0);
+    }
+
+    return res.status(200).json({
+      summary: { pointsThisGameweek, correctScores, totalPredictions, seasonAccuracy },
+      predictions: results.map(({ week, ...rest }) => rest), // drop internal-only field
+    });
   } catch (err) {
     next(err);
   }
