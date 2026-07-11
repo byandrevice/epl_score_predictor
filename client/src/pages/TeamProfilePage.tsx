@@ -252,7 +252,7 @@ function ScorerRow({ scorer, primaryColor, primaryDim }: { scorer: Scorer; prima
 export default function TeamPage() {
   console.log("TeamPage component has rendered!");
   const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
+  const { teamId } = useParams<{ teamId: string }>();
   const [loading, setLoading] = useState(true);
   
   // Keep an integrated single state object with safe default values 
@@ -282,7 +282,7 @@ export default function TeamPage() {
 
   useEffect(() => {
     async function fetchTeamProfile() {
-      if (!id) {
+      if (!teamId) {
         console.log("TeamPage: No ID found in URL parameters");
         return;
       }
@@ -290,9 +290,9 @@ export default function TeamPage() {
       try {
         setLoading(true);
         const token = localStorage.getItem("token") || "";
-        console.log("Fetching data for ID:", id); // Check if this logs
+        console.log("Fetching data for ID:", teamId); // Check if this logs
         
-        const responseData = await teamApi.getTeamDetails(id.toUpperCase(), token);
+        const responseData = await teamApi.getTeamDetails(teamId.toUpperCase(), token);
         
         console.log("API Response Received:", responseData); // Check if this logs
         
@@ -320,7 +320,7 @@ export default function TeamPage() {
     }
   
     fetchTeamProfile();
-  }, [id]);
+  }, [teamId]);
 
   // Shortcut references to make the layout rendering code below happy
   const { clubData, formHistory, upcomingFixtures, topScorers, statsSummary } = teamProfile;
