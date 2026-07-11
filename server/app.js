@@ -29,6 +29,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/fixtures", fixtureRoutes);
 app.use("/api/predictions", predictionRoutes);
+app.use("/api/predict", predictionRoutes); // PredictPage.tsx calls /api/predict/* — same router, second mount point
 app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/demo", demoRoutes);
 
