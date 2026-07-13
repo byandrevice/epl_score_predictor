@@ -32,18 +32,24 @@ function toClientShape(fixture, teamMap = {}) {
 exports.getUpcoming = async (req, res, next) => {
   try {
     const fixtures = await Fixture.find({ kickoff: { $gte: new Date() } }).sort({ kickoff: 1 }); 
-    
-    // Explicitly check if Team.find is returning data
-    const teams = await Team.find({});
-    console.log("Teams found in DB:", teams.length); // If this is 0, the controller is looking at the wrong DB
-    
+    const teams = await Team.find({}); // Fetch all teams
+
+    // Map short names to their logo URLs
     const teamMap = {};
-    teams.forEach(team => {
-      // Use toUpperCase to be safe against case mismatches
-      teamMap[team.shortName.toUpperCase()] = team.logoUrl;
+    teams.forEach(t => teamMap[t.shortName] = t.logoUrl);
+
+    // Attach the logos to each fixture before sending
+    const fixturesWithLogos = fixtures.map(f => {
+      const obj = f.toObject();
+      return {
+        ...obj,
+        id: obj._id.toString(),
+        homeLogoUrl: teamMap[obj.homeShort] || "default-logo.png", // Pulls URL
+        awayLogoUrl: teamMap[obj.awayShort] || "default-logo.png"
+      };
     });
 
-    return res.status(200).json(fixtures.map(f => toClientShape(f, teamMap))); 
+    return res.status(200).json(fixturesWithLogos);
   } catch (err) {
     next(err);
   }

@@ -144,7 +144,7 @@ function ScoreInput({
 export default function PredictPage() {
   const navigate = useNavigate();
 
-  const [gameweek, setGameweek] = useState<string>("GW38");
+  const [gameweek, setGameweek] = useState<string>("Loading..."); // Updated default
   const [deadline, setDeadline] = useState<string | null>(null);
   const [matches, setMatches] = useState<PredictMatch[]>([]);
 
@@ -157,12 +157,10 @@ export default function PredictPage() {
   const { expired: deadlinePassed, h: countdownH, m: countdownM, string: countdownStr } = useCountdown(deadline);
   const urgency = !deadlinePassed && countdownH === 0 && countdownM < 30;
 
-  // --- Fetch upcoming gameweek predictions ---
   useEffect(() => {
     async function fetchPredictiveFixtures() {
       setLoading(true);
       setError(null);
-      setSubmitted(false);
       try {
         const token = localStorage.getItem("auth_token");
         if (!token) {
@@ -173,78 +171,16 @@ export default function PredictPage() {
         const res = await fetch(`${BACKEND_URL}/predict/fixtures`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (!res.ok) throw new Error("Failed to pull gameweek submission profiles.");
+        
+        if (!res.ok) throw new Error("Failed to fetch gameweek data.");
 
         const data = await res.json();
-        setGameweek(data.gameweek || "GW38");
-        setDeadline(data.deadline || null);
+        setGameweek(data.gameweek);
+        setDeadline(data.deadline);
         setMatches(data.matches || []);
       } catch (err: any) {
-        console.warn("Backend offline, utilizing layout configuration mockup arrays.");
-
-        const targetDeadline = new Date(Date.now() + 2 * 60 * 60 * 1000 + 45 * 60 * 1000).toISOString();
-        setDeadline(targetDeadline);
-        setGameweek("GW38");
-
-        setMatches([
-          {
-            id: 101,
-            home: "Manchester City",
-            homeShort: "MCI",
-            homeCrest: "🔵",
-            homeColor: "#6CABDD",
-            homeDim: "rgba(108,171,221,0.12)",
-            away: "Liverpool",
-            awayShort: "LIV",
-            awayCrest: "🔴",
-            awayColor: "#C8102E",
-            awayDim: "rgba(200,16,46,0.12)",
-            kickoff: targetDeadline,
-            venue: "Etihad Stadium",
-            homeScore: "0",
-            awayScore: "0",
-            locked: false,
-            community: { homeWin: 60, draw: 25, awayWin: 15, totalPredictions: 14832 }
-          },
-          {
-            id: 102,
-            home: "Arsenal",
-            homeShort: "ARS",
-            homeCrest: "🔴",
-            homeColor: "#EF0107",
-            homeDim: "rgba(239,1,7,0.12)",
-            away: "Chelsea",
-            awayShort: "CHE",
-            awayCrest: "🔵",
-            awayColor: "#034694",
-            awayDim: "rgba(3,70,148,0.12)",
-            kickoff: targetDeadline,
-            venue: "Emirates Stadium",
-            homeScore: "",
-            awayScore: "",
-            locked: false,
-            community: { homeWin: 45, draw: 30, awayWin: 25, totalPredictions: 12411 }
-          },
-          {
-            id: 103,
-            home: "Manchester United",
-            homeShort: "MUN",
-            homeCrest: "😈",
-            homeColor: "#DA291C",
-            homeDim: "rgba(218,41,28,0.12)",
-            away: "Tottenham",
-            awayShort: "TOT",
-            awayCrest: "🐓",
-            awayColor: "#132257",
-            awayDim: "rgba(19,34,87,0.12)",
-            kickoff: new Date(Date.now() - 60000).toISOString(),
-            venue: "Old Trafford",
-            homeScore: "1",
-            awayScore: "0",
-            locked: true,
-            community: { homeWin: 33, draw: 33, awayWin: 34, totalPredictions: 9400 }
-          }
-        ]);
+        console.error("Fetch error:", err);
+        setError("Unable to load fixtures. Please check your connection.");
       } finally {
         setLoading(false);
       }
@@ -252,6 +188,27 @@ export default function PredictPage() {
 
     fetchPredictiveFixtures();
   }, [navigate]);
+
+  // ... (handleScoreUpdate and handleSubmitAll remain the same)
+
+  if (loading) {
+    // ... (Loading state remains the same)
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-destructive">
+        <AlertTriangle size={32} />
+        <span className="text-sm font-bold tracking-widest uppercase">{error}</span>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="text-xs underline hover:text-white mt-2"
+        >
+          Retry Connection
+        </button>
+      </div>
+    );
+  }
 
   const handleScoreUpdate = (matchId: number, side: "home" | "away", val: string) => {
     setMatches((prev) =>
