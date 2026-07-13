@@ -7,6 +7,9 @@ const predictionRoutes = require("./routes/predictionRoutes");
 const leaderboardRoutes = require("./routes/leaderboardRoutes");
 const demoRoutes = require("./routes/demoRoutes");
 const userRoutes = require("./routes/userRoutes");
+
+const statsRoutes = require("./routes/statsRoutes");
+
 const errorHandler = require("./middleware/errorHandler");
 
 const teamRoutes = require('./routes/teamRoutes');
@@ -32,6 +35,8 @@ app.use("/api/predictions", predictionRoutes);
 app.use("/api/predict", predictionRoutes); // PredictPage.tsx calls /api/predict/* — same router, second mount point
 app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/demo", demoRoutes);
+
+app.use('/api/stats', statsRoutes);
 
 app.use('/api/teams', teamRoutes);
 

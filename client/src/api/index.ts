@@ -144,7 +144,7 @@ export const authApi = {
     if (!response.ok) throw new Error("Failed to load live leaderboard");
     return response.json();
   },
-
+  
   /**
    * Fetch active dashboard rankings filtered by scope ("Overall" | "GW38" | "Friends")
    */
@@ -237,5 +237,25 @@ export const teamApi = {
       throw new Error(data.message || "Failed to parse backend team metrics.");
     }
     return data.data; // Returns the database document item safely
+  }
+};
+
+export const statsApi = {
+  // Fetch league table
+  getTable: async (season: string, token: string): Promise<any> => {
+    const response = await fetch(`${getBaseUrl()}/stats/table?season=${season}`, {
+      method: "GET",
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    return response.json();
+  },
+
+  // Fetch user prediction history
+  getUserPredictions: async (userId: string, token: string): Promise<any> => {
+    const response = await fetch(`${getBaseUrl()}/stats/predictions/${userId}`, {
+      method: "GET",
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    return response.json();
   }
 };

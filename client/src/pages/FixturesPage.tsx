@@ -35,6 +35,71 @@ interface LeaderboardUser {
   trend?: string;
 }
 
+interface StandingRow {
+  _id: string;
+  teamName: string;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  gf: number;
+  ga: number;
+  gd: number;
+  pts: number;
+}
+
+// --- League Table Widget ---
+function LeagueTableWidget() {
+  const [table, setTable] = useState<StandingRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const BACKEND_URL = "http://localhost:5001/api";
+
+  useEffect(() => {
+    fetch(`${BACKEND_URL}/stats/table`)
+      .then((res) => res.json())
+      .then((data) => setTable(data))
+      .catch((err) => console.error("Failed to load league table:", err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <div className="bg-card rounded-xl border border-border overflow-hidden">
+      <div className="px-5 py-4 flex items-center gap-2 border-b border-border">
+        <Trophy size={14} className="text-primary" />
+        <span className="text-sm font-bold tracking-widest uppercase text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}>
+          EPL Table
+        </span>
+      </div>
+
+      <div className="px-5 py-2 flex items-center gap-2 border-b border-border bg-muted/20">
+        <span className="w-5 text-[9px] text-muted-foreground uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>#</span>
+        <span className="flex-1 text-[9px] text-muted-foreground uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Team</span>
+        <span className="w-6 text-right text-[9px] text-muted-foreground uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>W</span>
+        <span className="w-6 text-right text-[9px] text-muted-foreground uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>D</span>
+        <span className="w-6 text-right text-[9px] text-muted-foreground uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>L</span>
+        <span className="w-8 text-right text-[9px] text-muted-foreground uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Pts</span>
+      </div>
+
+      <div className="divide-y divide-border">
+        {loading ? (
+          <div className="px-5 py-4 text-[10px] text-muted-foreground uppercase animate-pulse font-mono">Loading table...</div>
+        ) : (
+          table.map((row, i) => (
+            <div key={row._id} className="px-5 py-2.5 flex items-center gap-2 hover:bg-muted/20 transition-colors">
+              <span className="w-5 text-xs font-bold text-muted-foreground" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{i + 1}</span>
+              <span className="flex-1 text-xs text-foreground truncate" style={{ fontFamily: "'DM Sans', sans-serif" }}>{row.teamName}</span>
+              <span className="w-6 text-right text-xs text-muted-foreground" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{row.won}</span>
+              <span className="w-6 text-right text-xs text-muted-foreground" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{row.drawn}</span>
+              <span className="w-6 text-right text-xs text-muted-foreground" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{row.lost}</span>
+              <span className="w-8 text-right text-xs font-bold text-primary" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{row.pts}</span>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function FixturesPage() {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState("GW38");
