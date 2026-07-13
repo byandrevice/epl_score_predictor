@@ -68,78 +68,34 @@ function NavBar({ screen, setScreen }: { screen: Screen; setScreen: (s: Screen) 
  * Displays a single football match fixture with home/away teams, game info, and betting-style odds buttons.
  */
 function MatchCard({ match }: { match: Match }) {
-  // Keeps track of what the user predicted ("home", "draw", "away", or nothing)
-  const [prediction, setPrediction] = useState<"home" | "draw" | "away" | null>(null);
-  
-  // Handles clicking a prediction button. Clicking an already active button turns it off.
-  const handlePrediction = async (type: "home" | "draw" | "away") => {
-    const nextPrediction = prediction === type ? null : type;
-    setPrediction(nextPrediction);
-
-    if (nextPrediction) {
-      console.log(`Live Event: Saved user prediction "${nextPrediction}" for Match ID ${match.id}`);
-    }
-  };
-
   return (
-    <div className="bg-card border border-border flex flex-col gap-0 overflow-hidden group hover:border-primary/30 transition-colors duration-200">
-      {/* Top bar of the card: Time and Venue */}
-      <div className="px-4 py-2.5 flex items-center justify-between border-b border-border bg-muted/30">
-        <div className="flex items-center gap-1.5">
-          <Clock size={11} className="text-muted-foreground" />
-          <span className="text-[10px] tracking-widest text-muted-foreground uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-            {match.date} · {match.time}
-          </span>
-        </div>
-        <span className="text-[10px] tracking-wider text-muted-foreground uppercase truncate max-w-[110px]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-          {match.venue}
+    <div className="bg-card border border-border p-6 flex items-center justify-between gap-3 group hover:border-primary/30 transition-colors duration-200">
+      
+      {/* Home Team */}
+      <div className="flex flex-col items-center gap-2 flex-1">
+        {/* Replace match.homeCrest with the actual logo URL */}
+        <img 
+          src={match.homeLogoUrl} 
+          alt={match.home} 
+          className="w-12 h-12 object-contain" 
+        />
+        <span className="text-sm font-bold text-foreground text-center" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+          {match.home}
         </span>
       </div>
 
-      {/* Middle section: Team crests and names */}
-      <div className="px-5 py-5 flex items-center justify-between gap-3">
-        {/* Home Team */}
-        <div className="flex flex-col items-center gap-1.5 flex-1">
-          <span className="text-2xl">{match.homeCrest}</span>
-          <span className="text-base font-bold text-foreground tracking-wide text-center leading-tight" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-            {match.home}
-          </span>
-          <span className="text-[10px] text-muted-foreground tracking-widest" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-            {match.homeShort}
-          </span>
-        </div>
-
-        <div className="flex flex-col items-center gap-1 flex-shrink-0">
-          <span className="text-xl font-black text-muted-foreground/40" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>VS</span>
-        </div>
-
-        {/* Away Team */}
-        <div className="flex flex-col items-center gap-1.5 flex-1">
-          <span className="text-2xl">{match.awayCrest}</span>
-          <span className="text-base font-bold text-foreground tracking-wide text-center leading-tight" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-            {match.away}
-          </span>
-          <span className="text-[10px] text-muted-foreground tracking-widest" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-            {match.awayShort}
-          </span>
-        </div>
+      {/* Away Team */}
+      <div className="flex flex-col items-center gap-2 flex-1">
+        <img 
+          src={match.awayLogoUrl} 
+          alt={match.away} 
+          className="w-12 h-12 object-contain" 
+        />
+        <span className="text-sm font-bold text-foreground text-center" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+          {match.away}
+        </span>
       </div>
-
-      {/* Bottom section: Prediction buttons (Home win, Draw, Away win) */}
-      <div className="px-4 pb-4 grid grid-cols-3 gap-1.5">
-        {(["home", "draw", "away"] as const).map((type) => {
-          const label = type === "home" ? match.homeShort : type === "away" ? match.awayShort : "DRW";
-          const odds = type === "home" ? match.homeOdds : type === "away" ? match.awayOdds : match.drawOdds;
-          const active = prediction === type;
-          return (
-            <button key={type} onClick={() => handlePrediction(type)}
-              className={`flex flex-col items-center py-2 border text-xs transition-all duration-150 ${active ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"}`}>
-              <span className="text-[10px] tracking-widest font-semibold uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{label}</span>
-              <span className="text-sm font-bold mt-0.5" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>{odds}</span>
-            </button>
-          );
-        })}
-      </div>
+      
     </div>
   );
 }
@@ -249,6 +205,7 @@ function LandingScreen({ matches, leaderboard, setScreen }: { matches: Match[]; 
           <div className="py-10 text-center text-xs text-muted-foreground animate-pulse font-mono uppercase">Syncing Live Fixtures...</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
+            {/* Ensure 'key={m.id}' is present here */}
             {matches.map((m) => <MatchCard key={m.id} match={m} />)}
           </div>
         )}
@@ -618,20 +575,28 @@ export default function AuthPage() {
       try {
         const [liveMatches, liveLeaderboard] = await Promise.all([
           authApi.getLandingMatches(),
-          authApi.getLandingLeaderboard()
+          authApi.getLandingLeaderboard() 
         ]);
-
+        
         setMatches(liveMatches);
-        setLeaderboard(liveLeaderboard);
+    
+        // Only set the state once, using the correct property
+        if (liveLeaderboard && Array.isArray(liveLeaderboard.users)) {
+          // Use .slice(0, 10) to limit the array to the first 10 items
+          setLeaderboard(liveLeaderboard.users.slice(0, 9));
+        } else {
+          console.error("Data structure unexpected:", liveLeaderboard);
+          setLeaderboard([]); // Fallback to empty array to prevent crashing
+        }
       } catch (error) {
         console.error("Failed to parse dynamic live metrics from backend:", error);
       }
     }
 
-    if (screen === "landing") {
-      fetchPremData();
-    }
-  }, [screen]);
+    // Remove the 'if (screen === "landing")' condition 
+    // to fetch data immediately on mount
+    fetchPremData();
+  }, []); // Empty dependency array means this runs once on mount
 
   return (
     <div className="min-h-screen bg-background">

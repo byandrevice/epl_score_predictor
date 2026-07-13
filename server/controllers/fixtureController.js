@@ -1,18 +1,24 @@
 // Fixture endpoints. TODO(Gia): implement using models/Fixture.
 const Fixture = require("../models/Fixture");
+const Team = require("../models/Team");
 
 // Mongo documents come with an '_id' field; the expects a plain 'id'.
 // This function converts one Fixture doc tinto flat shape
-function toClientShape(fixture) {
+function toClientShape(fixture, teamMap = {}) {
   const f = fixture.toObject ? fixture.toObject() : fixture;
+  
+  // Use logical OR to provide fallbacks if the fields are missing
+  const homeKey = (f.homeShort || "").toUpperCase();
+  const awayKey = (f.awayShort || "").toUpperCase();
+
   return {
     id: f._id.toString(),
-    home: f.home,
-    homeShort: f.homeShort,
-    homeCrest: f.homeCrest,
-    away: f.away,
-    awayShort: f.awayShort,
-    awayCrest: f.awayCrest,
+    home: f.home || "Unknown",
+    homeShort: f.homeShort || "N/A",
+    homeLogoUrl: teamMap[homeKey] || f.homeCrest || "default-logo-url.png",
+    away: f.away || "Unknown",
+    awayShort: f.awayShort || "N/A",
+    awayLogoUrl: teamMap[awayKey] || f.awayCrest || "default-logo-url.png",
     date: f.date,
     time: f.time,
     venue: f.venue,
@@ -24,29 +30,41 @@ function toClientShape(fixture) {
 }
 
 exports.getUpcoming = async (req, res, next) => {
-  // TODO: return upcoming fixtures (sorted by kickoff)
   try {
-    const fixtures = await Fixture.find({ kickoff: { $gte: new Date() } }).sort({kickoff: 1}); 
-    // This read as "find fixtures who kickoff time is at or after right now"-i.e. anything not yet played
-    // .sort({ kickoff: 1 })-1 means ascending order (sooner first). -1 would mean latest first.
+    const fixtures = await Fixture.find({ kickoff: { $gte: new Date() } }).sort({ kickoff: 1 }); 
     
-    return res.status(200).json(fixtures.map(toClientShape)); // returns an array, so we reshape every fixture in it using the helper function above.
+    // Explicitly check if Team.find is returning data
+    const teams = await Team.find({});
+    console.log("Teams found in DB:", teams.length); // If this is 0, the controller is looking at the wrong DB
+    
+    const teamMap = {};
+    teams.forEach(team => {
+      // Use toUpperCase to be safe against case mismatches
+      teamMap[team.shortName.toUpperCase()] = team.logoUrl;
+    });
+
+    return res.status(200).json(fixtures.map(f => toClientShape(f, teamMap))); 
   } catch (err) {
     next(err);
   }
 };
 
 exports.getOne = async (req, res, next) => {
-  // TODO: return a single fixture by id
   try {
     const fixture = await Fixture.findById(req.params.id);
-    // comes from the route router.get("/:id", ...)-whatever's in the URL after /fixtures/ becomes req.params.id
-    //Fixture.findById(...)-looks up a single document by its _id.
 
     if (!fixture) {
       return res.status(404).json({ message: "fixture not found."});
     }
-    return res.status(200).json(toClientShape(fixture));
+
+    // Fetch teams so the single view also gets the logo URLs
+    const teams = await Team.find({});
+    const teamMap = {};
+    teams.forEach(team => {
+      teamMap[team.shortName] = team.logoUrl;
+    });
+
+    return res.status(200).json(toClientShape(fixture, teamMap));
   } catch (err) {
     if (err.name === "CastError") { 
       return res.status(400).json({ message: "Invalid fixture id." });

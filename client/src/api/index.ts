@@ -37,14 +37,12 @@ export interface Match {
   homeShort: string;
   away: string;
   awayShort: string;
-  homeCrest: string;
-  awayCrest: string;
+  // Change these to support the logo URLs
+  homeLogoUrl: string; 
+  awayLogoUrl: string;
   date: string;
   time: string;
   venue: string;
-  homeOdds: string;
-  drawOdds: string;
-  awayOdds: string;
 }
 
 export interface LeaderboardUser {
