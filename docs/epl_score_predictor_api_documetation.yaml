@@ -1,0 +1,759 @@
+openapi: 3.0.0
+
+info:
+  title: EPL Score Predictor API
+  version: 1.0.0
+
+servers:
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/ucf-090/EPL-Score-Predictor-API/1.0.0
+  - url: http://localhost:5001
+
+tags:
+  - name: Authentication
+    description: User authentication endpoints
+
+  - name: User
+    description: User profile and statistics
+
+  - name: Fixtures
+    description: Match fixtures
+
+  - name: Predictions
+    description: Match predictions
+
+  - name: Leaderboard
+    description: Ranking system
+
+  - name: Demo Simulation
+    description: Presentation demo flow
+
+  - name: Teams
+    description: Team information
+
+  - name: System
+    description: API health checks
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+
+  /api/auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: Creates a new account and sends an email verification code.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - firstName
+                - lastName
+                - username
+                - email
+                - password
+              properties:
+                firstName:
+                  type: string
+                  example: John
+                lastName:
+                  type: string
+                  example: Smith
+                username:
+                  type: string
+                  example: john123
+                email:
+                  type: string
+                  example: john@gmail.com
+                password:
+                  type: string
+                  example: password123
+      responses:
+        "201":
+          description: Account created successfully
+          content:
+            application/json:
+              example:
+                success: true
+                message: Account created. Please check your email for the verification code.
+        "400":
+          description: Missing required fields
+        "409":
+          description: Email or username already exists
+
+
+  /api/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login user
+      description: Authenticates user and returns a JWT token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - identity
+                - password
+              properties:
+                identity:
+                  type: string
+                  example: john@gmail.com
+                  description: Email or username
+                password:
+                  type: string
+                  example: password123
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              example:
+                success: true
+                token: eyJhbGciOiJIUzI1NiIs...
+        "400":
+          description: Missing credentials
+        "401":
+          description: Invalid credentials
+
+
+  /api/auth/verify-email:
+    post:
+      tags:
+        - Authentication
+      summary: Verify email address
+      description: Verifies a user's email using the verification code.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - code
+              properties:
+                email:
+                  type: string
+                  example: john@gmail.com
+                code:
+                  type: string
+                  example: "123456"
+      responses:
+        "200":
+          description: Email verified successfully
+          content:
+            application/json:
+              example:
+                success: true
+                message: Email verified successfully.
+        "400":
+          description: Invalid verification code
+        "404":
+          description: User not found
+
+
+  /api/auth/resend-code:
+    post:
+      tags:
+        - Authentication
+      summary: Resend verification code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: john@gmail.com
+      responses:
+        "200":
+          description: Verification code resent
+        "404":
+          description: User not found
+
+
+  /api/auth/forgot-password:
+    post:
+      tags:
+        - Authentication
+      summary: Generate password reset code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: john@gmail.com
+      responses:
+        "200":
+          description: Reset code generated
+        "404":
+          description: User not found
+
+
+  /api/auth/reset-password:
+    post:
+      tags:
+        - Authentication
+      summary: Reset password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - code
+                - newPassword
+              properties:
+                email:
+                  type: string
+                  example: john@gmail.com
+                code:
+                  type: string
+                  example: "123456"
+                newPassword:
+                  type: string
+                  example: newpassword123
+      responses:
+        "200":
+          description: Password updated successfully
+        "400":
+          description: Invalid reset code
+        "404":
+          description: User not found
+
+  /api/user/profile:
+    get:
+      tags:
+        - User
+      summary: Get user profile
+      description: Returns the logged-in user's profile information.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Profile information returned
+          content:
+            application/json:
+              example:
+                username: john123
+                firstName: John
+                lastName: Smith
+                email: john@gmail.com
+                favoriteTeam: Arsenal
+                emailNotifications: true
+                reminderNotifications: true
+        "401":
+          description: Unauthorized
+
+
+  /api/user/stats:
+    get:
+      tags:
+        - User
+      summary: Get user statistics
+      description: Returns user ranking, points, accuracy, and streak.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User statistics returned
+          content:
+            application/json:
+              example:
+                rank: 1
+                points: 25
+                accuracy: "80%"
+                streak: "3W"
+        "401":
+          description: Unauthorized
+
+
+  /api/user/dashboard-meta:
+    get:
+      tags:
+        - User
+      summary: Get dashboard metadata
+      responses:
+        "200":
+          description: Dashboard metadata loaded
+          content:
+            application/json:
+              example:
+                success: true
+                message: Dashboard metadata loaded
+
+
+  /api/fixtures:
+    get:
+      tags:
+        - Fixtures
+      summary: Get fixtures with user prediction status
+      description: Returns fixtures for a selected week and includes whether the logged-in user has predicted.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: week
+          in: query
+          required: false
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: Fixtures returned successfully
+          content:
+            application/json:
+              example:
+                - id: "65f123abc456"
+                  home: Arsenal
+                  away: Chelsea
+                  predicted: true
+                  predictedHomeScore: 2
+                  predictedAwayScore: 1
+                  "401": 
+                    description: Unauthorized
+
+
+  /api/fixtures/upcoming:
+    get:
+      tags:
+        - Fixtures
+      summary: Get upcoming fixtures
+      description: Returns matches that have not started yet.
+      responses:
+        "200":
+          description: Upcoming fixtures returned
+          content:
+            application/json:
+              example:
+                - id: "65f123abc456"
+                  home: Arsenal
+                  away: Chelsea
+                  date: "2026-08-15"
+                  venue: Emirates Stadium
+                  locked: false
+
+
+  /api/fixtures/{id}:
+    get:
+      tags:
+        - Fixtures
+      summary: Get fixture by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: 65f123abc456
+      responses:
+        "200":
+          description: Fixture returned
+          content:
+            application/json:
+              example:
+                id: "65f123abc456"
+                home: Arsenal
+                away: Chelsea
+                finalHomeScore: 2
+                finalAwayScore: 1
+        "400":
+          description: Invalid fixture ID
+        "404":
+          description: Fixture not found
+
+
+
+  /api/predictions:
+    post:
+      tags:
+        - Predictions
+      summary: Submit a match prediction
+      description: Creates or updates a user's prediction for a fixture.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fixtureId
+                - homeScore
+                - awayScore
+              properties:
+                fixtureId:
+                  type: string
+                  example: 65f123abc456
+                homeScore:
+                  type: integer
+                  example: 2
+                awayScore:
+                  type: integer
+                  example: 1
+      responses:
+        "200":
+          description: Prediction saved
+          content:
+            application/json:
+              example:
+                success: true
+                message: Prediction saved.
+                prediction:
+                  id: "789abc"
+                  fixtureId: "65f123abc456"
+                  homeScore: 2
+                  awayScore: 1
+        "400":
+          description: Invalid prediction data
+        "403":
+          description: Prediction closed
+        "404":
+          description: Fixture not found
+
+
+  /api/predictions/mine:
+    get:
+      tags:
+        - Predictions
+      summary: Get current user's predictions
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User predictions returned
+          content:
+            application/json:
+              example:
+                - id: "789abc"
+                  fixtureId: "65f123abc456"
+                  homeScore: 2
+                  awayScore: 1
+                  pointsAwarded: 5
+        "401":
+          description: Unauthorized
+
+
+  /api/predictions/fixtures:
+    get:
+      tags:
+        - Predictions
+      summary: Get fixtures available for prediction
+      description: Returns the next gameweek fixtures and community prediction statistics.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Prediction fixtures returned
+          content:
+            application/json:
+              example:
+                gameweek: 1
+                deadline: "2026-08-15T15:00:00Z"
+                matches:
+                  - id: "65f123abc456"
+                    home: Arsenal
+                    away: Chelsea
+                    locked: false
+                    community:
+                      homeWin: 50
+                      draw: 20
+                      awayWin: 30
+                      totalPredictions: 100
+
+
+  /api/predictions/submit-all:
+    post:
+      tags:
+        - Predictions
+      summary: Submit multiple predictions
+      description: Saves multiple match predictions at once.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                predictions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      matchId:
+                        type: string
+                        example: 65f123abc456
+                      homeScore:
+                        type: integer
+                        example: 1
+                      awayScore:
+                        type: integer
+                        example: 0
+      responses:
+        "200":
+          description: Predictions submitted successfully
+        "207":
+          description: Some predictions failed
+
+  /api/predictions/stats:
+    get:
+      tags:
+        - Predictions
+      summary: Get prediction history and statistics
+      description: Returns graded predictions, accuracy, and points summary.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Prediction statistics returned
+          content:
+            application/json:
+              example:
+                summary:
+                  pointsThisGameweek: 10
+                  correctScores: 2
+                  totalPredictions: 8
+                  seasonAccuracy: 75
+                predictions:
+                  - homeTeam: Arsenal
+                    awayTeam: Chelsea
+                    result: correct_score
+                    points: 5
+
+  /api/leaderboard:
+    get:
+      tags:
+        - Leaderboard
+      summary: Get leaderboard rankings
+      description: Returns users ranked by prediction points.
+      responses:
+        "200":
+          description: Leaderboard returned successfully
+          content:
+            application/json:
+              example:
+                success: true
+                users:
+                  - rank: 1
+                    userId: "65abc123"
+                    name: John Smith
+                    pts: 50
+                    accuracy: "80%"
+                    trend: up
+                currentUser:
+                  rank: 1
+                  userId: "65abc123"
+                  name: John Smith
+                  pts: 50
+        "500":
+          description: Server error
+
+  /api/leaderboard/top:
+    get:
+      tags:
+        - Leaderboard
+      summary: Get top leaderboard users
+      description: Returns the highest ranked users.
+      responses:
+        "200":
+          description: Top users returned
+          content:
+            application/json:
+              example:
+                success: true
+                users: []
+
+
+
+  /api/demo/fixture:
+    post:
+      tags:
+        - Demo Simulation
+      summary: Create demo fixture
+      description: Creates a match fixture for the presentation simulation.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                home: Arsenal
+                away: Chelsea
+                kickoff: "2026-08-15T15:00:00Z"
+                week: 1
+      responses:
+        "201":
+          description: Fixture created
+          content:
+            application/json:
+              example:
+                success: true
+                fixture:
+                  home: Arsenal
+                  away: Chelsea
+
+
+  /api/demo/lock:
+    post:
+      tags:
+        - Demo Simulation
+      summary: Lock fixture predictions
+      description: Prevents users from submitting more predictions.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fixtureId:
+                  type: string
+                  example: 65f123abc456
+      responses:
+        "200":
+          description: Fixture locked successfully
+          content:
+            application/json:
+              example:
+                success: true
+
+
+  /api/demo/final-score:
+    post:
+      tags:
+        - Demo Simulation
+      summary: Set final match score
+      description: Adds the real match result for scoring.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fixtureId
+                - finalHomeScore
+                - finalAwayScore
+              properties:
+                fixtureId:
+                  type: string
+                  example: 65f123abc456
+                finalHomeScore:
+                  type: integer
+                  example: 2
+                finalAwayScore:
+                  type: integer
+                  example: 1
+      responses:
+        "200":
+          description: Final score saved
+          content:
+            application/json:
+              example:
+                success: true
+
+
+  /api/demo/calculate:
+    post:
+      tags:
+        - Demo Simulation
+      summary: Calculate prediction points
+      description: Calculates points after a match is completed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fixtureId:
+                  type: string
+                  example: 65f123abc456
+      responses:
+        "200":
+          description: Points calculated
+          content:
+            application/json:
+              example:
+                success: true
+                result:
+                  predictionsUpdated: 10
+
+
+
+  /api/teams/{id}:
+    get:
+      tags:
+        - Teams
+      summary: Get team profile
+      description: Returns team information, form, upcoming fixtures, and statistics.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: ARS
+      responses:
+        "200":
+          description: Team profile returned
+          content:
+            application/json:
+              example:
+                success: true
+                data:
+                  club:
+                    name: Arsenal
+                    shortName: ARS
+                    played: 10
+                    won: 8
+                    drawn: 1
+                    lost: 1
+                    pts: 25
+                  form:
+                    - W
+                    - W
+                    - D
+        "404":
+          description: Club record not found
+
+
+
+  /api/health:
+    get:
+      tags:
+        - System
+      summary: API health check
+      description: Checks whether the API server is running.
+      responses:
+        "200":
+          description: Server is healthy
+          content:
+            application/json:
+              example:
+                status: OK
