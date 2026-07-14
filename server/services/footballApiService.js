@@ -40,14 +40,6 @@ async function fetchRawMatches() {
   return data.matches; // array of match objects
 }
 
-function normalizeTeamName(name) {
-  return name
-    .replace(" FC", "")
-    .replace(" AFC", "")
-    .replace("AFC", "")
-    .trim();
-}
-
 // Turns one raw API match into our Fixture schema's shape.
 function mapMatchToFixture(match) {
   const kickoff = new Date(match.utcDate);
