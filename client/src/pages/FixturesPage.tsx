@@ -199,24 +199,58 @@ export default function FixturesPage() {
             </div>
 
             {/* Filter Pill Actions */}
-            <div className="flex items-center gap-1.5">
-              <Filter size={11} className="text-muted-foreground mr-1" />
-              {["All", "GW38", "GW37", "GW36"].map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setActiveFilter(f)}
-                  className={`px-3 py-1.5 text-[10px] font-semibold tracking-widest uppercase rounded-sm transition-all ${
-                    activeFilter === f
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted/40 text-muted-foreground hover:text-foreground border border-border"
+            <div className="w-full sm:w-auto overflow-hidden"> 
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
+                {["All", "GW38", "GW37"].map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setActiveFilter(f)}
+                    className={`flex-shrink-0 px-3 py-1.5 text-[10px] font-semibold tracking-widest uppercase rounded-sm transition-all ${
+                      activeFilter === f
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted/40 text-muted-foreground hover:text-foreground border border-border"
+                    }`}
+                    style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}
+                  >
+                    {f}
+                  </button>
+                ))}
+
+                <select
+                  value={activeFilter.match(/^GW\d+$/) && !["GW38", "GW37", "GW2", "GW1"].includes(activeFilter) ? activeFilter : ""}
+                  onChange={(e) => e.target.value && setActiveFilter(e.target.value)}
+                  className={`flex-shrink-0 px-2 py-1.5 text-[10px] font-semibold tracking-widest uppercase rounded-sm border border-border bg-muted/40 text-muted-foreground hover:text-foreground transition-all ${
+                    activeFilter.match(/^GW\d+$/) && !["GW38", "GW37", "GW2", "GW1"].includes(activeFilter)
+                      ? "!bg-primary !text-primary-foreground"
+                      : ""
                   }`}
                   style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}
                 >
-                  {f}
-                </button>
-              ))}
+                  <option value="">···</option>
+                  {Array.from({ length: 34 }, (_, i) => `GW${36 - i}`).map((gw) => (
+                    <option key={gw} value={gw}>{gw}</option>
+                  ))}
+                </select>
+
+                {["GW2", "GW1"].map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setActiveFilter(f)}
+                    className={`flex-shrink-0 px-3 py-1.5 text-[10px] font-semibold tracking-widest uppercase rounded-sm transition-all ${
+                      activeFilter === f
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted/40 text-muted-foreground hover:text-foreground border border-border"
+                    }`}
+                    style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
+
 
           {/* Gameweek Info Strip */}
           <div className="flex items-center gap-3 mb-4">
