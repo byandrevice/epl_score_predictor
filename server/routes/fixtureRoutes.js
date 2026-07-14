@@ -12,14 +12,18 @@ router.get("/:id", fixtureController.getOne);
 // Logged-in dashboard: fixtures merged with this user's prediction status
 router.get("/", authMiddleware, async (req, res) => {
     try {
-        // If no week is provided, find the next upcoming gameweek
         let { week } = req.query;
-        if (!week) {
-            const nextFixture = await Fixture.findOne({ kickoff: { $gte: new Date() } }).sort({ kickoff: 1 });
-            week = nextFixture ? nextFixture.week : "GW38"; 
+        let query = {};
+
+        // Only add the week filter if it's provided and not "All"
+        if (week && week !== "All") {
+            query = { week: week };
+        } else {
+            // If "All", fetch everything upcoming (or adjust as needed)
+            query = { kickoff: { $gte: new Date() } }; 
         }
-        
-        const fixtures = await Fixture.find({ week: week });
+
+        const fixtures = await Fixture.find(query).sort({ kickoff: 1 });
         const userPredictions = await Prediction.find({ user: req.user.id });
 
         const fixturesWithPredictions = fixtures.map(f => {
