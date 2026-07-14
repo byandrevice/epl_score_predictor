@@ -80,7 +80,14 @@ exports.getPredictFixtures = async (req, res, next) => {
   try {
     const userId = req.user.id;
 
-    // Find the next fixture that hasn't kicked off yet, use its week as "the" gameweek
+    // 1. Fetch team logos first to map them
+    
+    const Team = require("../models/Team"); // Ensure Team model is required
+    const teams = await Team.find({});
+    const teamMap = {};
+    teams.forEach(t => teamMap[t.shortName] = t.logoUrl);
+
+    // 2. Find the next gameweek
     const nextFixture = await Fixture.findOne({ kickoff: { $gte: new Date() } }).sort({ kickoff: 1 });
     if (!nextFixture) {
       return res.status(200).json({ gameweek: null, deadline: null, matches: [] });
@@ -91,7 +98,7 @@ exports.getPredictFixtures = async (req, res, next) => {
 
     const myPredictions = await Prediction.find({ user: userId, fixture: { $in: fixtureIds } });
 
-    // Community outcome distribution per fixture (how many predicted home win / draw / away win)
+    // Community outcome distribution logic remains the same...
     const communityStats = await Prediction.aggregate([
       { $match: { fixture: { $in: fixtureIds } } },
       {
@@ -107,6 +114,7 @@ exports.getPredictFixtures = async (req, res, next) => {
       { $group: { _id: { fixture: "$fixture", outcome: "$outcome" }, count: { $sum: 1 } } },
     ]);
 
+    // 3. Map matches with logos included
     const matches = fixtures.map((f) => {
       const mine = myPredictions.find((p) => p.fixture.toString() === f._id.toString());
       const statsForFixture = communityStats.filter((s) => s._id.fixture.toString() === f._id.toString());
@@ -118,9 +126,11 @@ exports.getPredictFixtures = async (req, res, next) => {
         home: f.home,
         homeShort: f.homeShort,
         homeCrest: f.homeCrest,
+        homeLogoUrl: teamMap[f.homeShort.trim()] || null, // New: Add logo URL
         away: f.away,
         awayShort: f.awayShort,
         awayCrest: f.awayCrest,
+        awayLogoUrl: teamMap[f.awayShort.trim()] || null, // New: Add logo URL
         kickoff: f.kickoff,
         venue: f.venue,
         homeScore: mine ? String(mine.homeScore) : "",
