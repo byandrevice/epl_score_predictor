@@ -12,7 +12,13 @@ router.get("/:id", fixtureController.getOne);
 // Logged-in dashboard: fixtures merged with this user's prediction status
 router.get("/", authMiddleware, async (req, res) => {
     try {
-        const { week } = req.query;
+        // If no week is provided, find the next upcoming gameweek
+        let { week } = req.query;
+        if (!week) {
+            const nextFixture = await Fixture.findOne({ kickoff: { $gte: new Date() } }).sort({ kickoff: 1 });
+            week = nextFixture ? nextFixture.week : "GW38"; 
+        }
+        
         const fixtures = await Fixture.find({ week: week });
         const userPredictions = await Prediction.find({ user: req.user.id });
 

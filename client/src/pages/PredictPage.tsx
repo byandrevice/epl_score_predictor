@@ -37,6 +37,8 @@ interface PredictMatch {
     awayWin: number;
     totalPredictions: number;
   };
+  homeLogoUrl?: string; 
+  awayLogoUrl?: string;
 }
 
 // --- Countdown hook ---
@@ -480,17 +482,24 @@ export default function PredictPage() {
                     {/* Away Side Column Display */}
                     <div className="flex flex-col items-center text-center gap-3">
                       <div className="relative">
+                        {/* --- UPDATED CONTAINER FOR AWAY TEAM --- */}
                         <div
-                          className="w-16 h-16 rounded-xl flex items-center justify-center text-3xl"
+                          className="w-16 h-16 rounded-xl flex items-center justify-center text-3xl overflow-hidden"
                           style={{
                             background: `radial-gradient(circle at 40% 35%, ${match.awayDim}, rgba(18,21,18,0.6))`,
                             border: `1px solid ${match.awayColor}25`,
                           }}
                         >
-                          {match.awayCrest}
+                          {match.awayLogoUrl ? (
+                            <img src={match.awayLogoUrl} alt={match.away} className="w-full h-full object-contain p-2" />
+                          ) : (
+                            match.awayCrest
+                          )}
                         </div>
+                        {/* -------------------------------------- */}
                         <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-2 rounded-full blur-lg opacity-40 pointer-events-none" style={{ background: match.awayColor }} />
                       </div>
+                      
                       <div>
                         <div className="text-sm font-black text-foreground uppercase truncate max-w-[120px]" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
                           {match.away}

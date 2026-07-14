@@ -102,7 +102,7 @@ function LeagueTableWidget() {
 
 export default function FixturesPage() {
   const navigate = useNavigate();
-  const [activeFilter, setActiveFilter] = useState("GW38");
+  const [activeFilter, setActiveFilter] = useState("");
 
   // Live Data State Management
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
