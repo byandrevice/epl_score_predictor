@@ -5,8 +5,8 @@ const Prediction = require("../models/Prediction");
 const authMiddleware = require("../middleware/auth");
 const fixtureController = require("../controllers/fixtureController");
 
-// Public: used by the landing page and anywhere unauthenticated fixtures are needed
 router.get("/upcoming", fixtureController.getUpcoming);
+router.post("/sync", fixtureController.syncFromApi); // pulls real fixtures from football-data.org
 router.get("/:id", fixtureController.getOne);
 
 // Logged-in dashboard: fixtures merged with this user's prediction status

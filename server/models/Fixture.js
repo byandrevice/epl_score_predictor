@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const fixtureSchema = new mongoose.Schema(
   {
+    externalId: { type: Number, unique: true, sparse: true }, // football-data.org match id, for safe re-imports
     home: { type: String, required: true },
     homeShort: { type: String },
     homeCrest: { type: String },

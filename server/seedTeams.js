@@ -423,7 +423,71 @@ const EPL_TEAMS = [
       { label: "Clean Sheets", value: "4", icon: "Shield" },
       { label: "Goals Scored", value: "37", icon: "Crosshair" }
     ]
-  }
+  },
+
+  {
+    id: "LEE",
+    name: "Leeds United",
+    shortName: "LEE",
+    stadium: "Elland Road",
+    logoUrl: "/logos/leeds.png",
+    manager: "Daniel Farke",
+    primaryColor: "#FFCD00",
+    capacity: "37,890",
+    topScorers: [
+      { rank: 1, name: "Joel Piroe", initials: "JP", position: "Forward", goals: 15, assists: 4 },
+      { rank: 2, name: "Dan James", initials: "DJ", position: "Winger", goals: 10, assists: 8 },
+      { rank: 3, name: "Brenden Aaronson", initials: "BA", position: "Midfielder", goals: 7, assists: 6 }
+    ],
+    statsSummary: [
+      { label: "Possession Avg", value: "51.6%", icon: "TrendingUp" },
+      { label: "Clean Sheets", value: "8", icon: "Shield" },
+      { label: "Goals Scored", value: "51", icon: "Crosshair" }
+    ]
+  },
+
+  {
+    id: "COV",
+    name: "Coventry City",
+    shortName: "COV",
+    stadium: "Coventry Building Society Arena",
+    logoUrl: "https://crests.football-data.org/1076.png",
+    manager: "Frank Lampard",
+    primaryColor: "#6CABDD",
+    capacity: "32,609",
+    topScorers: [
+      { rank: 1, name: "Haji Wright", initials: "HW", position: "Forward", goals: 14, assists: 3 },
+      { rank: 2, name: "Jack Rudoni", initials: "JR", position: "Midfielder", goals: 8, assists: 6 },
+      { rank: 3, name: "Ellis Simms", initials: "ES", position: "Forward", goals: 7, assists: 4 }
+    ],
+    statsSummary: [
+      { label: "Possession Avg", value: "48.7%", icon: "TrendingUp" },
+      { label: "Clean Sheets", value: "7", icon: "Shield" },
+      { label: "Goals Scored", value: "45", icon: "Crosshair" }
+    ]
+  },
+
+  {
+    id: "HUL",
+    name: "Hull City",
+    shortName: "HUL",
+    stadium: "MKM Stadium",
+    logoUrl: "https://crests.football-data.org/322.png",
+    manager: "Sergej Jakirović",
+    primaryColor: "#F4A300",
+    capacity: "25,586",
+    topScorers: [
+      { rank: 1, name: "João Pedro", initials: "JP", position: "Forward", goals: 12, assists: 4 },
+      { rank: 2, name: "Abu Kamara", initials: "AK", position: "Winger", goals: 8, assists: 5 },
+      { rank: 3, name: "Gustavo Puerta", initials: "GP", position: "Midfielder", goals: 5, assists: 6 }
+    ],
+    statsSummary: [
+      { label: "Possession Avg", value: "46.5%", icon: "TrendingUp" },
+      { label: "Clean Sheets", value: "6", icon: "Shield" },
+      { label: "Goals Scored", value: "42", icon: "Crosshair" }
+    ]
+  },
+
 ];
 
 async function seed() {

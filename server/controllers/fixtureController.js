@@ -78,3 +78,19 @@ exports.getOne = async (req, res, next) => {
     next(err);
   }
 };
+
+// Pulls real EPL fixtures from football-data.org and upserts them into
+// the Fixture collection. Kept separate from the demo endpoints on purpose —
+// if the external API is down or rate-limited, the demo flow still works
+// as a fallback for presentations.
+// POST /api/fixtures/sync
+const footballApiService = require("../services/footballApiService");
+
+exports.syncFromApi = async (req, res, next) => {
+  try {
+    const results = await footballApiService.syncFixtures();
+    return res.status(200).json({ success: true, results });
+  } catch (err) {
+    next(err);
+  }
+};
