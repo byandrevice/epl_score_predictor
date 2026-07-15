@@ -388,7 +388,7 @@ function FixtureCard({ fixture, navigate, selectedYear }: { fixture: Fixture; na
           </span>
         </div>
         <button
-          onClick={() => navigate(`/dashboard/predict/${fixture.week}/${selectedYear}`)}
+          onClick={() => navigate(`/dashboard/predict?week=${fixture.week}&year=${selectedYear}`)}
           className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 text-xs font-bold tracking-widest uppercase rounded-sm transition-all active:scale-[0.97] ${
             fixture.predicted
               ? "bg-muted border border-primary/20 text-primary hover:bg-primary/10"

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import {
   ArrowLeft,
   Clock,
@@ -146,6 +146,10 @@ function ScoreInput({
 export default function PredictPage() {
   const navigate = useNavigate();
 
+  const [searchParams] = useSearchParams();
+  const week = searchParams.get("week");
+  const year = searchParams.get("year");
+
   const [gameweek, setGameweek] = useState<string>("Loading..."); // Updated default
   const [deadline, setDeadline] = useState<string | null>(null);
   const [matches, setMatches] = useState<PredictMatch[]>([]);
@@ -170,7 +174,8 @@ export default function PredictPage() {
           return;
         }
 
-        const res = await fetch(`${BACKEND_URL}/predict/fixtures`, {
+        const query = week && year ? `?week=${week}&year=${year}` : "";
+        const res = await fetch(`${BACKEND_URL}/predict/fixtures${query}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         
@@ -189,7 +194,7 @@ export default function PredictPage() {
     }
 
     fetchPredictiveFixtures();
-  }, [navigate]);
+}, [week, year]);
 
   // ... (handleScoreUpdate and handleSubmitAll remain the same)
 

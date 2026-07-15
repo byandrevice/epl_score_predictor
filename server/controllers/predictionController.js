@@ -79,27 +79,31 @@ exports.getMine = async (req, res, next) => {
 exports.getPredictFixtures = async (req, res, next) => {
   try {
     const userId = req.user.id;
+    const { week, year } = req.query;
 
     const Team = require("../models/Team");
     const teams = await Team.find({});
     const teamMap = {};
     teams.forEach(t => teamMap[t.shortName] = t.logoUrl);
 
-    const nextFixture = await Fixture.findOne({ kickoff: { $gte: new Date() } }).sort({ kickoff: 1 });
-    if (!nextFixture) {
-      return res.status(200).json({ gameweek: null, deadline: null, matches: [] });
+    let targetWeek, seasonStartYear;
+    if (week && year) {
+      targetWeek = week;               // week is stored as "GW38" string, keep as-is
+      seasonStartYear = Number(year);
+    } else {
+      const nextFixture = await Fixture.findOne({ kickoff: { $gte: new Date() } }).sort({ kickoff: 1 });
+      if (!nextFixture) return res.status(200).json({ gameweek: null, deadline: null, matches: [] });
+      const kickoffYear = nextFixture.kickoff.getUTCFullYear();
+      const kickoffMonth = nextFixture.kickoff.getUTCMonth();
+      seasonStartYear = kickoffMonth >= 7 ? kickoffYear : kickoffYear - 1;
+      targetWeek = nextFixture.week;
     }
 
-    // Same season as nextFixture — season runs Aug of one calendar year
-    // through Jul of the next, matching Standing.season's "YYYY/YY" convention.
-    const kickoffYear = nextFixture.kickoff.getUTCFullYear();
-    const kickoffMonth = nextFixture.kickoff.getUTCMonth(); // 0 = Jan
-    const seasonStartYear = kickoffMonth >= 7 ? kickoffYear : kickoffYear - 1; // Aug = index 7
     const seasonStart = new Date(`${seasonStartYear}-08-01T00:00:00.000Z`);
     const seasonEnd = new Date(`${seasonStartYear + 1}-08-01T00:00:00.000Z`);
 
     const fixtures = await Fixture.find({
-      week: nextFixture.week,
+      week: targetWeek,
       kickoff: { $gte: seasonStart, $lt: seasonEnd },
     }).sort({ kickoff: 1 });
 
@@ -155,8 +159,8 @@ exports.getPredictFixtures = async (req, res, next) => {
     });
 
     return res.status(200).json({
-      gameweek: nextFixture.week,
-      deadline: nextFixture.kickoff,
+      gameweek: targetWeek,
+      deadline: fixtures[0]?.kickoff || null,
       matches,
     });
   } catch (err) {
