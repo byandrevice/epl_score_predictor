@@ -14,7 +14,7 @@ export interface Team {
     BBR: { id: "BBR", name: "Blackburn Rovers", shortName: "BBR", stadium: "Ewood Park", logoUrl: "https://www.footylogos.com/images/logos/Blackburn_Rovers.png" },
     BLP: { id: "BLP", name: "Blackpool", shortName: "BLP", stadium: "Bloomfield Road", logoUrl: "https://www.footylogos.com/images/logos/Blackpool.png" },
     BOL: { id: "BOL", name: "Bolton Wanderers", shortName: "BOL", stadium: "Toughsheet Community Stadium", logoUrl: "https://www.footylogos.com/images/logos/Bolton_Wanderers.png" },
-    BOU: { id: "BOU", name: "AFC Bournemouth", shortName: "BOU", stadium: "Vitality Stadium", logoUrl: "https://resources.premierleague.com/premierleague/badges/t91.png" },
+    BOU: { id: "BOU", name: "AFC Bournemouth", shortName: "BOU", stadium: "Vitality Stadium", logoUrl: "https://crests.football-data.org/bournemouth.png" },
     BRA: { id: "BRA", name: "Bradford City", shortName: "BRA", stadium: "Valley Parade", logoUrl: "https://www.footylogos.com/images/logos/Bradford_City.png" },
     BRE: { id: "BRE", name: "Brentford", shortName: "BRE", stadium: "Gtech Community Stadium", logoUrl: "https://resources.premierleague.com/premierleague/badges/t94.png" },
     BHA: { id: "BHA", name: "Brighton & Hove Albion", shortName: "BHA", stadium: "Amex Stadium", logoUrl: "https://resources.premierleague.com/premierleague/badges/t36.png" },
