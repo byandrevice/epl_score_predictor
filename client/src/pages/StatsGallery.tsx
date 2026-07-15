@@ -4,20 +4,24 @@ import { CheckCircle2, XCircle, MinusCircle, Star, Zap, TrendingUp, TrendingDown
 // ─── Types matching predictionController.getStats()'s response exactly ───
 type PredictionResult = "correct_score" | "correct_outcome" | "wrong";
 
-interface PredictionCard {
-  id: string;
-  homeTeam: string;
-  awayTeam: string;
-  homeCrest: string;
-  awayCrest: string;
-  finalHome: number;
-  finalAway: number;
-  predHome: number;
-  predAway: number;
-  result: PredictionResult;
-  points: number;
-  matchDate: string;
-  venue: string;
+
+interface LeagueTeam {
+  _id?: string;   
+  pos: number;
+  name: string;
+  short: string;
+  crest: string;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  gf: number;
+  ga: number;
+  gd: number;
+  pts: number;
+  form: FormResult[];
+  trend: "up" | "down" | "same";
+  highlighted?: boolean; 
 }
 
 interface StatsSummary {
@@ -37,7 +41,6 @@ interface StatsResponse {
 type FormResult = "W" | "D" | "L";
 
 interface LeagueTeam {
-  _id?: string;
   pos: number;
   name: string;
   short: string;
@@ -52,7 +55,7 @@ interface LeagueTeam {
   pts: number;
   form: FormResult[];
   trend: "up" | "down" | "same";
-  highlighted?: boolean;
+  highlighted?: boolean; // Keep this so we can highlight the user's followed team!
 }
 
 async function fetchLeagueTable(week: string, season: string): Promise<LeagueTeam[]> {
@@ -61,7 +64,7 @@ async function fetchLeagueTable(week: string, season: string): Promise<LeagueTea
   const token = localStorage.getItem("auth_token");
 
   // If your week is "All", fall back to GW38 or the latest
-  const queryWeek = week === "All" ? "GW38" : week; 
+  const queryWeek = week === "All" ? "GW1" : week;
 
   const res = await fetch(`${baseUrl}/stats/table?week=${queryWeek}`, {
     headers: {
@@ -540,9 +543,19 @@ export default function StatsGallery() {
       // Fetch dynamic league table standings
       const tableResult = await fetchLeagueTable(activeFilter, selectedYear);
       if (cancelled) return;
-      
-      // Ensure we set whatever the API returns (empty array or actual data)
-      setTableData(tableResult || []);
+
+      // Get your logged-in user's team from state, localStorage, or auth context
+      const loggedInUser = JSON.parse(localStorage.getItem("user_profile") || "{}");
+      const userFollowedTeam = loggedInUser?.favoriteTeam || "Chelsea"; // Fallback if not loaded
+
+      // Map through the backend results and dynamically mark the followed team as highlighted
+      const updatedTableData = (tableResult || []).map((team: LeagueTeam) => ({
+        ...team,
+        // Match either full name (Chelsea FC) or short name (Chelsea)
+        highlighted: team.name === userFollowedTeam || team.name.includes(userFollowedTeam)
+      }));
+
+      setTableData(updatedTableData);
 
     } catch (err) {
       if (cancelled) return;
