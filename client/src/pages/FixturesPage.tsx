@@ -203,50 +203,50 @@ export default function FixturesPage() {
               <div className="flex items-center gap-1.5 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
                 {["All", "GW38", "GW37"].map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setActiveFilter(f)}
-                    className={`flex-shrink-0 px-3 py-1.5 text-[10px] font-semibold tracking-widest uppercase rounded-sm transition-all ${
-                      activeFilter === f
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted/40 text-muted-foreground hover:text-foreground border border-border"
-                    }`}
-                    style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}
-                  >
-                    {f}
-                  </button>
-                ))}
-
-                <select
-                  value={activeFilter.match(/^GW\d+$/) && !["GW38", "GW37", "GW2", "GW1"].includes(activeFilter) ? activeFilter : ""}
-                  onChange={(e) => e.target.value && setActiveFilter(e.target.value)}
-                  className={`flex-shrink-0 px-2 py-1.5 text-[10px] font-semibold tracking-widest uppercase rounded-sm border border-border bg-muted/40 text-muted-foreground hover:text-foreground transition-all ${
-                    activeFilter.match(/^GW\d+$/) && !["GW38", "GW37", "GW2", "GW1"].includes(activeFilter)
-                      ? "!bg-primary !text-primary-foreground"
-                      : ""
+                <button
+                  key={f}
+                  onClick={() => setActiveFilter(f)}
+                  className={`flex-shrink-0 px-3 py-1.5 text-[10px] font-semibold tracking-widest uppercase rounded-sm transition-all ${
+                    activeFilter === f
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted/40 text-muted-foreground hover:text-foreground border border-border"
                   }`}
                   style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}
                 >
-                  <option value="">···</option>
-                  {Array.from({ length: 34 }, (_, i) => `GW${36 - i}`).map((gw) => (
-                    <option key={gw} value={gw}>{gw}</option>
-                  ))}
-                </select>
+                  {f}
+                </button>
+              ))}
 
-                {["GW2", "GW1"].map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setActiveFilter(f)}
-                    className={`flex-shrink-0 px-3 py-1.5 text-[10px] font-semibold tracking-widest uppercase rounded-sm transition-all ${
-                      activeFilter === f
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted/40 text-muted-foreground hover:text-foreground border border-border"
-                    }`}
-                    style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}
-                  >
-                    {f}
-                  </button>
+              <select
+                value={activeFilter.match(/^GW\d+$/) && !["GW38", "GW37", "GW2", "GW1"].includes(activeFilter) ? activeFilter : ""}
+                onChange={(e) => e.target.value && setActiveFilter(e.target.value)}
+                className={`flex-shrink-0 px-2 py-1.5 text-[10px] font-semibold tracking-widest uppercase rounded-sm border border-border bg-muted/40 text-muted-foreground hover:text-foreground transition-all ${
+                  activeFilter.match(/^GW\d+$/) && !["GW38", "GW37", "GW2", "GW1"].includes(activeFilter)
+                    ? "!bg-primary !text-primary-foreground"
+                    : ""
+                }`}
+                style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}
+              >
+                <option value="">···</option>
+                {Array.from({ length: 34 }, (_, i) => `GW${36 - i}`).map((gw) => (
+                  <option key={gw} value={gw}>{gw}</option>
                 ))}
+              </select>
+
+              {["GW2", "GW1"].map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setActiveFilter(f)}
+                  className={`flex-shrink-0 px-3 py-1.5 text-[10px] font-semibold tracking-widest uppercase rounded-sm transition-all ${
+                    activeFilter === f
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted/40 text-muted-foreground hover:text-foreground border border-border"
+                  }`}
+                  style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}
+                >
+                  {f}
+                </button>
+              ))}
               </div>
             </div>
           </div>
@@ -283,7 +283,7 @@ export default function FixturesPage() {
 function TeamCrest({ shortName, fallbackEmoji, name }: { shortName: string; fallbackEmoji: string; name: string }) {
   const teamAsset = EPL_TEAMS_DATA[shortName];
   return (
-    <div className="flex flex-col items-center gap-2 min-w-0">
+    <div className="flex flex-col items-center gap-2 w-24 flex-shrink-0">
       <div className="w-12 h-12 rounded-xl bg-muted/50 border border-border flex items-center justify-center p-2 flex-shrink-0">
         {teamAsset?.logoUrl ? (
           <img src={teamAsset.logoUrl} alt={name} className="w-full h-full object-contain" />
@@ -292,7 +292,7 @@ function TeamCrest({ shortName, fallbackEmoji, name }: { shortName: string; fall
         )}
       </div>
       <span
-        className="text-xs font-bold text-foreground text-center leading-tight line-clamp-1"
+        className="text-xs font-bold text-foreground text-center leading-tight w-full h-8 flex items-center justify-center"
         style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.03em" }}
       >
         {name}

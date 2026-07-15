@@ -450,7 +450,11 @@ export default function PredictPage() {
                             border: `1px solid ${match.homeColor}25`,
                           }}
                         >
-                          {match.homeCrest}
+                          {match.homeLogoUrl ? (
+                            <img src={match.homeLogoUrl} alt={match.home} className="w-full h-full object-contain p-2" />
+                          ) : (
+                            match.homeCrest
+                          )}
                         </div>
                         <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-2 rounded-full blur-lg opacity-40 pointer-events-none" style={{ background: match.homeColor }} />
                       </div>

@@ -9,7 +9,7 @@ const teamSchema = new mongoose.Schema({
   logoUrl: { type: String, required: true },
   manager: { type: String, default: "TBD" },
   primaryColor: { type: String, default: "#22c55e" }, 
-  capacity: { type: String, default: "N/A" }, // <--- YOU NEED THIS COMMA HERE
+  capacity: { type: String, default: "N/A" }, 
   topScorers: [Object],
   statsSummary: [Object]
 }, { timestamps: true });
