@@ -205,8 +205,7 @@ function LandingScreen({ matches, leaderboard, setScreen }: { matches: Match[]; 
           <div className="py-10 text-center text-xs text-muted-foreground animate-pulse font-mono uppercase">Syncing Live Fixtures...</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
-            {/* Ensure 'key={m.id}' is present here */}
-            {matches.map((m) => <MatchCard key={m.id} match={m} />)}
+            {matches.slice(0, 3).map((m) => <MatchCard key={m.id} match={m} />)}
           </div>
         )}
 
@@ -378,6 +377,7 @@ function RegisterScreen({ setScreen, onRegister }: { setScreen: (s: Screen) => v
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   // Simple validation checking if the typed password matches the confirmation string
@@ -387,7 +387,7 @@ function RegisterScreen({ setScreen, onRegister }: { setScreen: (s: Screen) => v
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!passwordMatch || password === "" || email === "" || username === "" || firstName === "" || lastName === "") return;
+    if (!agreed || !passwordMatch || password === "" || email === "" || username === "" || firstName === "" || lastName === "") return;
 
     setLoading(true);
     try {
@@ -435,16 +435,27 @@ function RegisterScreen({ setScreen, onRegister }: { setScreen: (s: Screen) => v
           </div>
           {error && <span className="text-[10px] text-destructive font-mono uppercase tracking-wider">{error}</span>}
           <div className="mt-1 flex flex-col gap-2">
-            <div className="flex items-start gap-2.5">
-              <div className="w-3.5 h-3.5 mt-0.5 border border-border flex-shrink-0" />
+            <label className="flex items-start gap-2.5 cursor-pointer select-none">
+              <input 
+                type="checkbox" 
+                checked={agreed} 
+                onChange={(e) => setAgreed(e.target.checked)} 
+                className="sr-only" // Hides the native checkbox visually but keeps it accessible
+              />
+              <div className="w-3.5 h-3.5 mt-0.5 border border-border flex-shrink-0 flex items-center justify-center bg-muted text-[10px] font-bold text-primary transition-colors">
+                {agreed && "X"} {/* 👈 The X appears here when agreed is true! */}
+              </div>
               <span className="text-xs text-muted-foreground leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
-                I agree to the <span className="text-primary cursor-pointer hover:opacity-80">Terms of Service</span> and <span className="text-primary cursor-pointer hover:opacity-80">Privacy Policy</span>
+                I agree to the <span className="text-primary hover:opacity-80">Terms of Service</span> and <span className="text-primary hover:opacity-80">Privacy Policy</span>
               </span>
-            </div>
+            </label>
           </div>
-          <button type="submit" disabled={!passwordMatch || password === "" || email === "" || username === "" || firstName === "" || lastName === "" || loading}
+          <button 
+            type="submit" 
+            disabled={!agreed || !passwordMatch || password === "" || email === "" || username === "" || firstName === "" || lastName === "" || loading}
             className="mt-2 w-full py-3.5 bg-primary text-primary-foreground font-bold tracking-widest uppercase text-sm hover:opacity-90 transition-opacity active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.15em" }}>
+            style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.15em" }}
+          >
             {loading ? "Creating Profile..." : "Create Account"}
           </button>
         </form>
