@@ -103,6 +103,7 @@ function LeagueTableWidget() {
 export default function FixturesPage() {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState("GW38");
+  const [selectedYear, setSelectedYear] = useState("2026");
 
   // Live Data State Management
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
@@ -134,7 +135,7 @@ export default function FixturesPage() {
   
         // Perform individual fetches to prevent one failure from blocking others
         const [fixturesRes, leaderboardRes, profileRes] = await Promise.allSettled([
-          fetch(`${BACKEND_URL}/fixtures?week=${activeFilter}&userId=${userId}`, { headers }),
+          fetch(`${BACKEND_URL}/fixtures?week=${activeFilter}&year=${selectedYear}&userId=${userId}`, { headers }),
           fetch(`${BACKEND_URL}/leaderboard?scope=Overall`, { headers }),
           fetch(`${BACKEND_URL}/user/stats?userId=${userId}`, { headers })
         ]);
@@ -164,7 +165,7 @@ export default function FixturesPage() {
     }
   
     fetchDashboardData();
-  }, [activeFilter]); // Re-runs whenever the user changes the filter
+  }, [activeFilter, selectedYear]);
 
   if (loading) {
     return (
@@ -247,6 +248,17 @@ export default function FixturesPage() {
                   {f}
                 </button>
               ))}
+
+               <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(e.target.value)}
+                className="flex-shrink-0 px-2 py-1.5 text-[10px] font-semibold tracking-widest uppercase rounded-sm border border-border bg-muted/40 text-muted-foreground hover:text-foreground transition-all"
+                style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}
+              >
+                {["2026", "2025", "2024"].map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
               </div>
             </div>
           </div>
@@ -267,7 +279,12 @@ export default function FixturesPage() {
           {/* Fixture Card Rows */}
           <div className="flex flex-col gap-3">
             {fixtures.map((fixture) => (
-              <FixtureCard key={fixture.id} fixture={fixture} navigate={navigate} />
+              <FixtureCard 
+                key={fixture.id} 
+                fixture={fixture} 
+                navigate={navigate} 
+                selectedYear={selectedYear} // 👈 Pass it down here!
+              />
             ))}
           </div>
         </section>
@@ -302,7 +319,7 @@ function TeamCrest({ shortName, fallbackEmoji, name }: { shortName: string; fall
 }
 
 // --- High-Fidelity Match Widget ---
-function FixtureCard({ fixture, navigate }: { fixture: Fixture; navigate: any }) {
+function FixtureCard({ fixture, navigate, selectedYear }: { fixture: Fixture; navigate: any; selectedYear: string; }) {
   return (
     <div className={`bg-card rounded-xl border transition-all duration-200 hover:shadow-lg group overflow-hidden ${fixture.predicted ? "border-primary/25 hover:border-primary/40" : "border-border hover:border-border/80"}`}>
       
@@ -371,7 +388,7 @@ function FixtureCard({ fixture, navigate }: { fixture: Fixture; navigate: any })
           </span>
         </div>
         <button
-          onClick={() => navigate("/dashboard/predict")}
+          onClick={() => navigate(`/dashboard/predict/${fixture.week}/${selectedYear}`)}
           className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 text-xs font-bold tracking-widest uppercase rounded-sm transition-all active:scale-[0.97] ${
             fixture.predicted
               ? "bg-muted border border-primary/20 text-primary hover:bg-primary/10"

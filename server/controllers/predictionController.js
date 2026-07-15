@@ -80,20 +80,29 @@ exports.getPredictFixtures = async (req, res, next) => {
   try {
     const userId = req.user.id;
 
-    // 1. Fetch team logos first to map them
-    
-    const Team = require("../models/Team"); // Ensure Team model is required
+    const Team = require("../models/Team");
     const teams = await Team.find({});
     const teamMap = {};
     teams.forEach(t => teamMap[t.shortName] = t.logoUrl);
 
-    // 2. Find the next gameweek
     const nextFixture = await Fixture.findOne({ kickoff: { $gte: new Date() } }).sort({ kickoff: 1 });
     if (!nextFixture) {
       return res.status(200).json({ gameweek: null, deadline: null, matches: [] });
     }
 
-    const fixtures = await Fixture.find({ week: nextFixture.week }).sort({ kickoff: 1 });
+    // Same season as nextFixture — season runs Aug of one calendar year
+    // through Jul of the next, matching Standing.season's "YYYY/YY" convention.
+    const kickoffYear = nextFixture.kickoff.getUTCFullYear();
+    const kickoffMonth = nextFixture.kickoff.getUTCMonth(); // 0 = Jan
+    const seasonStartYear = kickoffMonth >= 7 ? kickoffYear : kickoffYear - 1; // Aug = index 7
+    const seasonStart = new Date(`${seasonStartYear}-08-01T00:00:00.000Z`);
+    const seasonEnd = new Date(`${seasonStartYear + 1}-08-01T00:00:00.000Z`);
+
+    const fixtures = await Fixture.find({
+      week: nextFixture.week,
+      kickoff: { $gte: seasonStart, $lt: seasonEnd },
+    }).sort({ kickoff: 1 });
+
     const fixtureIds = fixtures.map((f) => f._id);
 
     const myPredictions = await Prediction.find({ user: userId, fixture: { $in: fixtureIds } });

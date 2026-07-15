@@ -12,18 +12,16 @@ router.get("/:id", fixtureController.getOne);
 // Logged-in dashboard: fixtures merged with this user's prediction status
 router.get("/", authMiddleware, async (req, res) => {
     try {
-        let { week } = req.query;
-        let query = {};
-
-        // Only add the week filter if it's provided and not "All"
-        if (week && week !== "All") {
-            query = { week: week };
-        } else {
-            // If "All", fetch everything upcoming (or adjust as needed)
-            query = { kickoff: { $gte: new Date() } }; 
+        const { week, year } = req.query;
+        const query = { week };
+        if (year) {
+            // "year" is the season's start year — "2025" means the 2025/26 season,
+            // which runs Aug 2025 through Jul 2026.
+            const seasonStart = new Date(`${year}-08-01T00:00:00.000Z`);
+            const seasonEnd = new Date(`${Number(year) + 1}-08-01T00:00:00.000Z`);
+            query.kickoff = { $gte: seasonStart, $lt: seasonEnd };
         }
-
-        const fixtures = await Fixture.find(query).sort({ kickoff: 1 });
+        const fixtures = await Fixture.find(query);
         const userPredictions = await Prediction.find({ user: req.user.id });
 
         const fixturesWithPredictions = fixtures.map(f => {
