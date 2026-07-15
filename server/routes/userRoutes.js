@@ -60,7 +60,9 @@ router.get("/stats", authMiddleware, async (req, res) => {
             rank,
             points: totalPoints,
             accuracy: predictionsMade > 0 ? `${Math.round((correctScores / predictionsMade) * 100)}%` : "0%",
-            streak: `${currentStreak}W` // Dynamic streak value[cite: 3]
+            streak: `${currentStreak}W`, // Dynamic streak value[cite: 3]
+            correctScores,
+            predictionsMade
         });
     } catch (err) {
         console.error(err);
