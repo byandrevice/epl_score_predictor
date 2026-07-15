@@ -403,9 +403,9 @@ export default function PredictPage() {
             const userSide: "home" | "draw" | "away" | null = !hasValues ? null : h > a ? "home" : h === a ? "draw" : "away";
 
             const segments = [
-              { key: "home" as const, label: `${match.homeShort} Win`, pct: match.community.homeWin, color: match.homeColor },
+              { key: "home" as const, label: `${match.homeShort} Win`, pct: match.community.homeWin, color: "#e03e3e" },
               { key: "draw" as const, label: "Draw", pct: match.community.draw, color: "#fbbf24" },
-              { key: "away" as const, label: `${match.awayShort} Win`, pct: match.community.awayWin, color: match.awayColor },
+              { key: "away" as const, label: `${match.awayShort} Win`, pct: match.community.awayWin, color: "#3b82f6" },
             ];
 
             return (
