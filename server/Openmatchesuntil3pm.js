@@ -9,24 +9,23 @@
 const mongoose = require("mongoose");
 const Fixture = require("./models/Fixture");
 
-const MONGO_URI = process.env.MONGO_URI; // match whatever server.js / seedStats.js uses
+const MONGO_URI = process.env.MONGO_URI;
 
 async function run() {
   await mongoose.connect(MONGO_URI);
 
-  const today3PM = new Date();
-  today3PM.setHours(15, 0, 0, 0); // 3:00 PM local server time
+  const today345PM = new Date();
+  today345PM.setHours(15, 45, 0, 0); // 3:45 PM local server time
 
-  if (today3PM.getTime() <= Date.now()) {
-    console.log("It's already past 3PM today — nothing to open. Adjust the time in this script if needed.");
+  if (today345PM.getTime() <= Date.now()) {
+    console.log("It's already past 3:45 PM today — nothing to open. Adjust the time in this script if needed.");
     await mongoose.disconnect();
     return;
   }
 
   const result = await Fixture.updateMany(
     {
-      // Last year's season only (2025/26): kickoff from Aug 2025 through Jul 2026.
-      // This year's season (2026/27, kickoff Aug 2026+) is untouched.
+      // Last year's season only (2025/26)
       kickoff: {
         $gte: new Date("2025-08-01T00:00:00.000Z"),
         $lt: new Date("2026-08-01T00:00:00.000Z"),
@@ -35,13 +34,16 @@ async function run() {
     {
       $set: {
         locked: false,
-        kickoff: today3PM,
-        date: today3PM.toISOString().slice(0, 10),
+        kickoff: today345PM,
+        date: today345PM.toISOString().slice(0, 10),
       },
     }
   );
 
-  console.log(`Opened ${result.modifiedCount} fixtures. They'll auto-lock again at 3:00 PM today.`);
+  console.log(
+    `Opened ${result.modifiedCount} fixtures. They'll auto-lock again at 3:45 PM today.`
+  );
+
   await mongoose.disconnect();
 }
 

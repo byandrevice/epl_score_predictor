@@ -394,6 +394,12 @@ export default function PredictPage() {
         <div className="flex flex-col gap-8">
           {matches.map((match) => {
             const isLocked = match.locked || deadlinePassed;
+            const total = match.community.totalPredictions || 0;
+
+            // Calculate actual percentages safely (fallback to 0 if there are no predictions yet)
+            const homePct = total > 0 ? Math.round((match.community.homeWin / total) * 100) : 0;
+            const drawPct = total > 0 ? Math.round((match.community.draw / total) * 100) : 0;
+            const awayPct = total > 0 ? Math.round((match.community.awayWin / total) * 100) : 0;
             
             const h = parseInt(match.homeScore, 10) || 0;
             const a = parseInt(match.awayScore, 10) || 0;
@@ -403,9 +409,9 @@ export default function PredictPage() {
             const userSide: "home" | "draw" | "away" | null = !hasValues ? null : h > a ? "home" : h === a ? "draw" : "away";
 
             const segments = [
-              { key: "home" as const, label: `${match.homeShort} Win`, pct: match.community.homeWin, color: "#e03e3e" },
-              { key: "draw" as const, label: "Draw", pct: match.community.draw, color: "#fbbf24" },
-              { key: "away" as const, label: `${match.awayShort} Win`, pct: match.community.awayWin, color: "#3b82f6" },
+              { key: "home" as const, label: `${match.homeShort} Win`, pct: homePct, color: "#e03e3e" },
+              { key: "draw" as const, label: "Draw", pct: drawPct, color: "#fbbf24" },
+              { key: "away" as const, label: `${match.awayShort} Win`, pct: awayPct, color: "#3b82f6" },
             ];
 
             return (
