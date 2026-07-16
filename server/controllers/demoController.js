@@ -3,6 +3,9 @@
 // TODO(Gia): implement using services/demoSimulationService.
 
 const demoSimulationService = require("../services/demoSimulationService");
+const Fixture = require("../models/Fixture");
+const Prediction = require("../models/Prediction");
+const User = require("../models/User");
 
 // ------------------------------------
 // Create fixture
@@ -50,28 +53,33 @@ exports.lockFixture = async (req, res, next) => {
 // Set final score
 // POST /api/demo/final-score
 // ------------------------------------
-exports.setFinalScore = async (req, res, next) => {
+exports.setFinalScore = async (req, res) => {
   try {
+    const { fixtureId, homeScore, awayScore } = req.body;
 
-    const {
-      fixtureId,
-      finalHomeScore,
-      finalAwayScore
-    } = req.body;
+    const fixture = await Fixture.findById(fixtureId);
 
-    const fixture = await demoSimulationService.setFinalScore(
-      fixtureId,
-      finalHomeScore,
-      finalAwayScore
-    );
+    if (!fixture) {
+      return res.status(404).json({
+        message: "Fixture not found"
+      });
+    }
 
-    res.status(200).json({
+    fixture.finalHomeScore = homeScore;
+    fixture.finalAwayScore = awayScore;
+
+    await fixture.save();
+
+    res.json({
       success: true,
       fixture
     });
 
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: error.message
+    });
   }
 };
 

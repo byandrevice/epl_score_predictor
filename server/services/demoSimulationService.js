@@ -96,7 +96,7 @@ exports.calculatePoints = async (fixtureId) => {
 
     prediction.pointsAwarded = points;
 
-    const predWin  = Math.sign(prediction.homeScore - prediction.awayScore);
+    const predWin = Math.sign(prediction.homeScore - prediction.awayScore);
     const finalWin = Math.sign(fixture.finalHomeScore - fixture.finalAwayScore);
     prediction.isCorrect = predWin === finalWin;
 
