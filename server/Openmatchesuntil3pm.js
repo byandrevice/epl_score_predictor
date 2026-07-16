@@ -1,10 +1,10 @@
-// openMatchesUntil3PM.js
-// Temporarily reopens ALL fixtures for predictions until 3:00 PM today (server-clock local time).
+// openMatchesUntil852PM.js
+// Temporarily reopens ALL fixtures for predictions until 8:52 PM today (server-clock local time).
 // Your existing lock check is: fixture.locked || fixture.kickoff.getTime() <= Date.now()
-// So this just sets locked=false and pushes kickoff to 3PM today — no extra cron/relock job needed,
-// it locks itself automatically the moment the clock passes 3PM, same as any real fixture would.
+// So this just sets locked=false and pushes kickoff to 8:52 PM today — no extra cron/relock job needed,
+// it locks itself automatically the moment the clock passes 8:52 PM, same as any real fixture would.
 //
-// Run: node openMatchesUntil3PM.js
+// Run: node openMatchesUntil852PM.js
 
 const mongoose = require("mongoose");
 const Fixture = require("./models/Fixture");
@@ -14,11 +14,11 @@ const MONGO_URI = process.env.MONGO_URI;
 async function run() {
   await mongoose.connect(MONGO_URI);
 
-  const today345PM = new Date();
-  today345PM.setHours(15, 45, 0, 0); // 3:45 PM local server time
+  const today852PM = new Date();
+  today852PM.setHours(20, 52, 0, 0); // 8:52 PM local server time (24-hour format)
 
-  if (today345PM.getTime() <= Date.now()) {
-    console.log("It's already past 3:45 PM today — nothing to open. Adjust the time in this script if needed.");
+  if (today852PM.getTime() <= Date.now()) {
+    console.log("It's already past 8:52 PM today — nothing to open. Adjust the time in this script if needed.");
     await mongoose.disconnect();
     return;
   }
@@ -34,14 +34,14 @@ async function run() {
     {
       $set: {
         locked: false,
-        kickoff: today345PM,
-        date: today345PM.toISOString().slice(0, 10),
+        kickoff: today852PM,
+        date: today852PM.toISOString().slice(0, 10),
       },
     }
   );
 
   console.log(
-    `Opened ${result.modifiedCount} fixtures. They'll auto-lock again at 3:45 PM today.`
+    `Opened ${result.modifiedCount} fixtures. They'll auto-lock again at 8:52 PM today.`
   );
 
   await mongoose.disconnect();

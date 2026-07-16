@@ -163,38 +163,39 @@ export default function PredictPage() {
   const { expired: deadlinePassed, h: countdownH, m: countdownM, string: countdownStr } = useCountdown(deadline);
   const urgency = !deadlinePassed && countdownH === 0 && countdownM < 30;
 
-  useEffect(() => {
-    async function fetchPredictiveFixtures() {
-      setLoading(true);
-      setError(null);
-      try {
-        const token = localStorage.getItem("auth_token");
-        if (!token) {
-          navigate("/");
-          return;
-        }
-
-        const query = week && year ? `?week=${week}&year=${year}` : "";
-        const res = await fetch(`${BACKEND_URL}/predict/fixtures${query}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        
-        if (!res.ok) throw new Error("Failed to fetch gameweek data.");
-
-        const data = await res.json();
-        setGameweek(data.gameweek);
-        setDeadline(data.deadline);
-        setMatches(data.matches || []);
-      } catch (err: any) {
-        console.error("Fetch error:", err);
-        setError("Unable to load fixtures. Please check your connection.");
-      } finally {
-        setLoading(false);
+  const fetchPredictiveFixtures = React.useCallback(async (showLoader = true) => {
+    if (showLoader) setLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        navigate("/");
+        return;
       }
-    }
 
-    fetchPredictiveFixtures();
-}, [week, year]);
+      const query = week && year ? `?week=${week}&year=${year}` : "";
+      const res = await fetch(`${BACKEND_URL}/predict/fixtures${query}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      if (!res.ok) throw new Error("Failed to fetch gameweek data.");
+
+      const data = await res.json();
+      setGameweek(data.gameweek);
+      setDeadline(data.deadline);
+      setMatches(data.matches || []);
+    } catch (err: any) {
+      console.error("Fetch error:", err);
+      setError("Unable to load fixtures. Please check your connection.");
+    } finally {
+      if (showLoader) setLoading(false);
+    }
+  }, [week, year, navigate, BACKEND_URL]);
+
+  // This runs the fetch automatically when the page loads
+  useEffect(() => {
+    fetchPredictiveFixtures(true);
+  }, [fetchPredictiveFixtures]);
 
   // ... (handleScoreUpdate and handleSubmitAll remain the same)
 
@@ -252,7 +253,13 @@ export default function PredictPage() {
       });
 
       if (!res.ok) throw new Error("Server rejected batch prediction packet.");
+      
       setSubmitted(true);
+      
+      // SILENT REFETCH: This pulls the updated community statistics from the DB 
+      // without triggering a full screen loading spinner!
+      await fetchPredictiveFixtures(false);
+
     } catch (err: any) {
       console.log("Mock Save Action Enabled: Synced matches offline.");
       setSubmitted(true);
