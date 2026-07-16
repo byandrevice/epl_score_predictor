@@ -14,6 +14,10 @@ const userSchema = new mongoose.Schema(
     favoriteTeam: { type: String, default: "" },
     emailNotifications: { type: Boolean, default: true },
     reminderNotifications: { type: Boolean, default: true },
+    // Opt-in flag: when true, other users can view this user's graded
+    // prediction history from their public profile (leaderboard click-through).
+    // Defaults to false/private so nothing is exposed until the user allows it.
+    predictionsPublic: { type: Boolean, default: false },
   }, { timestamps: true });
 
 // Runs automatically right before a document saves.

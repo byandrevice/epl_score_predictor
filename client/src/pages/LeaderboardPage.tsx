@@ -13,6 +13,7 @@ import {
   Loader2,
   Crown,
   ChevronDown,
+  Globe,
 } from "lucide-react";
 
 // --- Types ---
@@ -24,6 +25,7 @@ interface LeaderboardUser {
   accuracy: string;
   trend: "up" | "down" | "same";
   isCurrentUser?: boolean;
+  predictionsPublic?: boolean;
 }
 
 type ScopeFilter = "Overall" | "GW38" | "Friends";
@@ -211,7 +213,15 @@ export default function LeaderboardPage() {
               return (
                 <div
                   key={user.userId}
-                  className={`flex items-center gap-3 px-5 py-3 transition-colors ${
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate(isMe ? "/dashboard/profile" : `/dashboard/user/${user.userId}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      navigate(isMe ? "/dashboard/profile" : `/dashboard/user/${user.userId}`);
+                    }
+                  }}
+                  className={`flex items-center gap-3 px-5 py-3 transition-colors cursor-pointer ${
                     isMe ? "bg-primary/5" : "hover:bg-muted/20"
                   }`}
                 >
@@ -229,6 +239,16 @@ export default function LeaderboardPage() {
                         style={{ fontFamily: "'JetBrains Mono', monospace" }}
                       >
                         You
+                      </span>
+                    )}
+                    {!isMe && user.predictionsPublic && (
+                      <span
+                        title="This predictor's history is public"
+                        className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-sm bg-muted/60 text-muted-foreground tracking-widest uppercase flex-shrink-0"
+                        style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                      >
+                        <Globe size={9} />
+                        <span className="hidden sm:inline">Public</span>
                       </span>
                     )}
                   </div>
@@ -269,7 +289,15 @@ export default function LeaderboardPage() {
       {currentUser && !currentUserVisible && (
         <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-primary/30 bg-background/95 backdrop-blur-sm">
           <div className="max-w-4xl mx-auto px-4 md:px-8 py-3">
-            <div className="flex items-center gap-3 px-5 py-3 bg-primary/5 border border-primary/20 rounded-xl">
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate("/dashboard/profile")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") navigate("/dashboard/profile");
+              }}
+              className="flex items-center gap-3 px-5 py-3 bg-primary/5 border border-primary/20 rounded-xl cursor-pointer"
+            >
               <Trophy size={13} className="text-primary flex-shrink-0" />
               <RankBadge rank={currentUser.rank} />
               <div className="flex-1 flex items-center gap-2 min-w-0">

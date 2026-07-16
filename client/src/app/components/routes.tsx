@@ -7,6 +7,7 @@ import FixturesPage from "../../pages/FixturesPage";
 import LeaderboardPage from "../../pages/LeaderboardPage"; 
 import PredictPage from "../../pages/PredictPage"; 
 import ProfilePage from "../../pages/ProfilePage"; 
+import PublicProfilePage from "../../pages/PublicProfilePage"; 
 
 import StatsGallery from "../../pages/StatsGallery"; 
 import TeamProfilePage from "../../pages/TeamProfilePage"; 
@@ -68,6 +69,10 @@ const router = createBrowserRouter([
       {
         path: "profile",
         Component: ProfilePage,
+      },
+      {
+        path: "user/:userId",
+        Component: PublicProfilePage,
       },
       {
         path: "team/:teamId",

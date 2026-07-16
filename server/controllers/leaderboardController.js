@@ -23,6 +23,7 @@ exports.getTop = async (req, res, next) => {
           name: { 
             $concat: ["$firstName", " ", "$lastName"] 
           },
+          predictionsPublic: { $ifNull: ["$predictionsPublic", false] },
           pts: { $ifNull: [{ $sum: "$userPredictions.pointsAwarded" }, 0] },
           accuracy: {
             $cond: {
@@ -68,6 +69,7 @@ exports.getTop = async (req, res, next) => {
         pts: user.pts || 0,
         accuracy: user.accuracy || "0%",
         trend: mockTrend, // Uses the mock logic above
+        predictionsPublic: !!user.predictionsPublic,
       };
     });
 

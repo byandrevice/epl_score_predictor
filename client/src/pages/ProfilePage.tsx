@@ -28,6 +28,7 @@ interface ProfileData {
   memberSince: string;
   emailNotifications: boolean;
   reminderNotifications: boolean;
+  predictionsPublic: boolean;
 }
 
 interface ProfileStats {
@@ -121,23 +122,17 @@ export default function ProfilePage() {
       setDraft(updated);
       setEditing(false);
       setSaveConfirmed(true);
-
-      // Save to local storage on successful API update
-      localStorage.setItem("user_data", JSON.stringify(updated));
     } catch (err: any) {
-      console.warn("Fallback: Saving profile changes locally.", err);
-      // Fallback save locally so it still works offline!
+      // Offline mode save fallback simulation
       setProfile(draft);
       setEditing(false);
       setSaveConfirmed(true);
-      
-      localStorage.setItem("user_data", JSON.stringify(draft));
     } finally {
       setSaving(false);
     }
   };
 
-  const handleToggle = (key: "emailNotifications" | "reminderNotifications") => {
+  const handleToggle = (key: "emailNotifications" | "reminderNotifications" | "predictionsPublic") => {
     if (!draft) return;
     setDraft((prev) => (prev ? { ...prev, [key]: !prev[key] } : null));
     // Auto save layout for notification alterations
@@ -387,6 +382,49 @@ export default function ProfilePage() {
               </button>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* PRIVACY: control what other predictors can see on your public profile */}
+      <div className="bg-card rounded-xl border border-border p-6 flex flex-col gap-4">
+        <div className="flex items-center gap-2 border-b border-border pb-3">
+          <User size={14} className="text-primary" />
+          <h2
+            className="text-sm font-bold uppercase tracking-wider text-foreground"
+            style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+          >
+            Privacy
+          </h2>
+        </div>
+
+        <div className="py-1 flex items-center justify-between gap-6">
+          <div className="max-w-xl">
+            <p className="text-sm font-semibold text-foreground" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+              Public Prediction History
+            </p>
+            <p
+              className="text-xs text-muted-foreground mt-0.5"
+              style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}
+            >
+              When enabled, other predictors can click your name on the leaderboard and see your graded prediction
+              history. Your rank, points, and accuracy are always visible. This is off by default.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => handleToggle("predictionsPublic")}
+            className={`relative inline-flex w-9 rounded-full transition-colors cursor-pointer p-0.5 outline-none focus:ring-1 focus:ring-primary/20 flex-shrink-0 ${
+              draft?.predictionsPublic ? "bg-primary" : "bg-switch-background"
+            }`}
+            style={{ height: "1.375rem" }}
+          >
+            <span
+              className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-background transition-transform ${
+                draft?.predictionsPublic ? "translate-x-4" : "translate-x-0"
+              }`}
+            />
+          </button>
         </div>
       </div>
 

@@ -21,6 +21,7 @@ router.get("/profile", authMiddleware, async (req, res) => {
             favoriteTeam: user.favoriteTeam || "",
             emailNotifications: user.emailNotifications,
             reminderNotifications: user.reminderNotifications,
+            predictionsPublic: !!user.predictionsPublic,
             memberSince: user.createdAt
         };
 
@@ -30,38 +31,128 @@ router.get("/profile", authMiddleware, async (req, res) => {
     }
 });
 
-// Route to update Profile details
+// Route to update Profile (also used to opt in/out of a public prediction history)
 router.put("/profile", authMiddleware, async (req, res) => {
     try {
-      const userId = req.user.id; // Or req.user._id, depending on your auth setup
-      const { firstName, lastName, username, email, favoriteTeam } = req.body;
-  
-      const updatedUser = await User.findByIdAndUpdate(
-        userId,
-        { firstName, lastName, username, email, favoriteTeam },
-        { new: true, runValidators: true }
-      );
-  
-      if (!updatedUser) {
-        return res.status(404).json({ message: "User not found" });
-      }
-  
-      // Return the EXACT object format the frontend ProfileData interface expects!
-      res.json({
-        username: updatedUser.username,
-        email: updatedUser.email,
-        firstName: updatedUser.firstName || "",
-        lastName: updatedUser.lastName || "",
-        favoriteTeam: updatedUser.favoriteTeam || "",
-        memberSince: updatedUser.createdAt,
-        emailNotifications: updatedUser.emailNotifications || false,
-        reminderNotifications: updatedUser.reminderNotifications || false
-      });
+        const editable = [
+            "firstName",
+            "lastName",
+            "username",
+            "email",
+            "favoriteTeam",
+            "emailNotifications",
+            "reminderNotifications",
+            "predictionsPublic",
+        ];
+
+        const updates = {};
+        for (const key of editable) {
+            if (req.body[key] !== undefined) updates[key] = req.body[key];
+        }
+
+        const user = await User.findByIdAndUpdate(req.user.id, updates, {
+            new: true,
+            runValidators: true,
+        });
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        res.json({
+            username: user.username,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            favoriteTeam: user.favoriteTeam || "",
+            emailNotifications: user.emailNotifications,
+            reminderNotifications: user.reminderNotifications,
+            predictionsPublic: !!user.predictionsPublic,
+            memberSince: user.createdAt,
+        });
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: "Server error" });
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
     }
-  });
+});
+
+// Route to view another predictor's public profile (leaderboard click-through).
+// Rank/points/accuracy are always shown; the graded prediction history is only
+// included if that user has opted in via predictionsPublic.
+router.get("/:userId/public", authMiddleware, async (req, res) => {
+    try {
+        const { userId } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ message: "Invalid user id" });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        const userPredictions = await Prediction.find({ user: userId }).populate("fixture");
+        const totalPoints = userPredictions.reduce((sum, p) => sum + (p.pointsAwarded || 0), 0);
+        const predictionsMade = userPredictions.length;
+        const correctScores = userPredictions.filter((p) => p.isCorrect).length;
+
+        // Same ranking approach as /stats: rank by total points across all users.
+        const allTotals = await Prediction.aggregate([
+            { $group: { _id: "$user", totalPoints: { $sum: "$pointsAwarded" } } },
+            { $sort: { totalPoints: -1 } },
+        ]);
+        const rankIndex = allTotals.findIndex((p) => p._id.toString() === userId);
+        const rank = rankIndex !== -1 ? rankIndex + 1 : "Unranked";
+
+        const profile = {
+            userId: user._id.toString(),
+            username: user.username,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            favoriteTeam: user.favoriteTeam || "",
+            memberSince: user.createdAt,
+            rank,
+            points: totalPoints,
+            accuracy: predictionsMade > 0 ? `${Math.round((correctScores / predictionsMade) * 100)}%` : "0%",
+            predictionsMade,
+            correctScores,
+            predictionsPublic: !!user.predictionsPublic,
+            predictions: null,
+        };
+
+        if (user.predictionsPublic) {
+            const graded = userPredictions.filter(
+                (p) => p.fixture && p.fixture.finalHomeScore !== null && p.fixture.finalAwayScore !== null
+            );
+            const outcome = (h, a) => (h > a ? "HOME" : h < a ? "AWAY" : "DRAW");
+
+            profile.predictions = graded
+                .map((p) => {
+                    const f = p.fixture;
+                    const isExact = p.homeScore === f.finalHomeScore && p.awayScore === f.finalAwayScore;
+                    const sameOutcome =
+                        outcome(p.homeScore, p.awayScore) === outcome(f.finalHomeScore, f.finalAwayScore);
+                    const result = isExact ? "correct_score" : sameOutcome ? "correct_outcome" : "wrong";
+
+                    return {
+                        id: p._id.toString(),
+                        homeTeam: f.home,
+                        awayTeam: f.away,
+                        homeCrest: f.homeCrest,
+                        awayCrest: f.awayCrest,
+                        finalHome: f.finalHomeScore,
+                        finalAway: f.finalAwayScore,
+                        predHome: p.homeScore,
+                        predAway: p.awayScore,
+                        result,
+                        points: p.pointsAwarded,
+                        matchDate: f.kickoff,
+                    };
+                })
+                .sort((a, b) => new Date(b.matchDate).getTime() - new Date(a.matchDate).getTime());
+        }
+
+        res.json(profile);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
 
 // Route to get Stats
 router.get("/stats", authMiddleware, async (req, res) => {
