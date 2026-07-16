@@ -28,20 +28,37 @@ exports.getTop = async (req, res, next) => {
           accuracy: {
             $cond: {
               if: { $gt: [{ $size: "$userPredictions" }, 0] },
-              then: { 
+              then: {
                 $concat: [
-                  { $toString: { 
-                    $multiply: [
-                      { $divide: [
-                        { $sum: { $map: { input: "$userPredictions", as: "p", in: { $cond: ["$$p.isCorrect", 1, 0] } } } }, 
-                        { $size: "$userPredictions" }
-                      ] }, 
-                      100 
-                    ] 
-                  } },
+                  {
+                    $toString: {
+                      $round: [
+                        {
+                          $multiply: [
+                            {
+                              $divide: [
+                                {
+                                  $sum: {
+                                    $map: {
+                                      input: "$userPredictions",
+                                      as: "p",
+                                      in: { $cond: ["$$p.isCorrect", 1, 0] }
+                                    }
+                                  }
+                                },
+                                { $size: "$userPredictions" }
+                              ]
+                            },
+                            100
+                          ]
+                        },
+                        1 // 1 decimal place
+                      ]
+                    }
+                  },
                   "%"
                 ]
-              },
+              }, // <-- comma here
               else: "0%"
             }
           }
