@@ -99,8 +99,13 @@ export default function ProfilePage() {
   }, [navigate]);
 
   // --- 2. Post updated profile attributes ---
-  const handleSaveProfile = async () => {
-    if (!draft) return;
+  // Accepts an explicit profile object to save. This avoids a stale-closure bug where,
+  // if callers relied on the `draft` from component state, they'd capture whatever value
+  // `draft` held at the time this function was created (i.e. the render *before* a toggle
+  // click), instead of the freshly-toggled value.
+  const handleSaveProfile = async (profileToSave?: ProfileData) => {
+    const payload = profileToSave ?? draft;
+    if (!payload) return;
     setSaving(true);
     setError(null);
     setSaveConfirmed(false);
@@ -112,7 +117,7 @@ export default function ProfilePage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(draft),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) throw new Error("Could not commit settings adjustments.");
@@ -124,7 +129,7 @@ export default function ProfilePage() {
       setSaveConfirmed(true);
     } catch (err: any) {
       // Offline mode save fallback simulation
-      setProfile(draft);
+      setProfile(payload);
       setEditing(false);
       setSaveConfirmed(true);
     } finally {
@@ -134,11 +139,11 @@ export default function ProfilePage() {
 
   const handleToggle = (key: "emailNotifications" | "reminderNotifications" | "predictionsPublic") => {
     if (!draft) return;
-    setDraft((prev) => (prev ? { ...prev, [key]: !prev[key] } : null));
-    // Auto save layout for notification alterations
-    setTimeout(() => {
-      if (!editing) handleSaveProfile();
-    }, 50);
+    const nextDraft = { ...draft, [key]: !draft[key] };
+    setDraft(nextDraft);
+    // Auto save toggle changes immediately, passing the freshly-computed value directly
+    // rather than reading `draft` from state (which wouldn't have updated yet here).
+    if (!editing) handleSaveProfile(nextDraft);
   };
 
   const handleLogout = () => {

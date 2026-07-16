@@ -23,7 +23,7 @@ export interface Team {
     CHA: { id: "CHA", name: "Charlton Athletic", shortName: "CHA", stadium: "The Valley", logoUrl: "https://www.footylogos.com/images/logos/Charlton_Athletic.png" },
     CHE: { id: "CHE", name: "Chelsea", shortName: "CHE", stadium: "Stamford Bridge", logoUrl: "https://resources.premierleague.com/premierleague/badges/t8.png" },
     COV: { id: "COV", name: "Coventry City", shortName: "COV", stadium: "Coventry Building Society Arena", logoUrl: "https://crests.football-data.org/1076.png" },
-    CRY: { id: "CRY", name: "Crystal Palace", shortName: "CRY", stadium: "Selhurst Park", logoUrl: "https://resources.premierleague.com/premierleague/badges/t20.png" },
+    CRY: { id: "CRY", name: "Crystal Palace", shortName: "CRY", stadium: "Selhurst Park", logoUrl: "https://resources.premierleague.com/premierleague/badges/t31.png" },
     DER: { id: "DER", name: "Derby County", shortName: "DER", stadium: "Pride Park", logoUrl: "https://www.footylogos.com/images/logos/Derby_County.png" },
     EVE: { id: "EVE", name: "Everton", shortName: "EVE", stadium: "Hill Dickinson Stadium", logoUrl: "https://resources.premierleague.com/premierleague/badges/t11.png" },
     FUL: { id: "FUL", name: "Fulham", shortName: "FUL", stadium: "Craven Cottage", logoUrl: "https://resources.premierleague.com/premierleague/badges/t54.png" },
