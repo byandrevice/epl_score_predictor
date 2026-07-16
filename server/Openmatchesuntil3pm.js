@@ -3,7 +3,7 @@
 // Your existing lock check is: fixture.locked || fixture.kickoff.getTime() <= Date.now()
 // So this just sets locked=false and pushes kickoff to 1:00 PM today — no extra cron/relock job needed,
 // it locks itself automatically the moment the clock passes 1:00 PM, same as any real fixture would.
-// MONGO_URI="mongodb+srv://prempredicttree_db_user:YWh8hJ0rLkwyBSez@elppredictor.ybv4kqb.mongodb.net/?appName=elpPredictor" node Openmatchesuntil3pm.js
+// MONGO_URI="mongodb+srv://prempredicttree_db_user:YWh8hJ0rLkwyBSez@elppredictor.ybv4kqb.mongodb.net/?appName=elpPredictor" node generateAllStandings.js
 // Run: node openMatchesUntil1PM.js
 
 const mongoose = require("mongoose");

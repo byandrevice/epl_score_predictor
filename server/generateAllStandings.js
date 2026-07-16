@@ -6,8 +6,16 @@ const Standing = require("./models/Standing");
 const SEASONS = ["2025/26", "2026/27"]; // add more if you have other seasons seeded
 
 async function generateForWeek(queryWeek, querySeason) {
+  // "2025/26" -> season start year 2025 -> Aug 2025-Jul 2026 window.
+  // Without this, fixtures with the same `week` label from a different
+  // season get pulled in together (this was the actual bug).
+  const seasonStartYear = parseInt(querySeason.split("/")[0], 10);
+  const seasonStart = new Date(`${seasonStartYear}-08-01T00:00:00.000Z`);
+  const seasonEnd = new Date(`${seasonStartYear + 1}-08-01T00:00:00.000Z`);
+
   const fixtures = await Fixture.find({
     week: queryWeek,
+    kickoff: { $gte: seasonStart, $lt: seasonEnd },
     finalHomeScore: { $ne: null },
     finalAwayScore: { $ne: null },
   });
