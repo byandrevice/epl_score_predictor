@@ -222,10 +222,15 @@ exports.submitAll = async (req, res, next) => {
 exports.getStats = async (req, res, next) => {
   try {
     const userId = req.user.id;
+    const { week } = req.query;
 
     const predictions = await Prediction.find({ user: userId }).populate("fixture");
     const graded = predictions.filter(
-      (p) => p.fixture && p.fixture.finalHomeScore !== null && p.fixture.finalAwayScore !== null
+      (p) =>
+        p.fixture &&
+        p.fixture.finalHomeScore !== null &&
+        p.fixture.finalAwayScore !== null &&
+        (!week || p.fixture.week === week) // ← new: only keep the requested GW
     );
 
     const outcome = (h, a) => (h > a ? "HOME" : h < a ? "AWAY" : "DRAW");

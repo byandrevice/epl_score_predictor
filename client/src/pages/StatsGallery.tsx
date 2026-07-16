@@ -469,10 +469,8 @@ function LeagueTableRow({ team, index }: { team: LeagueTeam; index: number }) {
       </div>
 
       {/* Form badges */}
-      <div className="flex items-center gap-1 flex-shrink-0">
-        {team.form.map((f, i) => (
-          <FormBadge key={i} result={f} />
-        ))}
+      <div className="w-28 flex items-center justify-center gap-1 flex-shrink-0">
+        {team.form.map((f, i) => <FormBadge key={i} result={f} />)}
       </div>
 
       {/* Points */}
@@ -544,16 +542,44 @@ export default function StatsGallery() {
       const tableResult = await fetchLeagueTable(activeFilter, selectedYear);
       if (cancelled) return;
 
-      // Get your logged-in user's team from state, localStorage, or auth context
-      const loggedInUser = JSON.parse(localStorage.getItem("user_profile") || "{}");
-      const userFollowedTeam = loggedInUser?.favoriteTeam || "Chelsea"; // Fallback if not loaded
+      // Get the logged-in user's favorite team straight from the backend,
+      // instead of trusting a localStorage cache that's only set by ProfilePage.
+      const token = localStorage.getItem("auth_token");
+      const metaEnv = (import.meta as any).env;
+      const baseUrl = metaEnv?.VITE_API_URL || "http://localhost:5001/api";
+
+      let userFollowedTeam = "";
+      try {
+        const profileRes = await fetch(`${baseUrl}/user/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          userFollowedTeam = profileData.favoriteTeam || "";
+        }
+      } catch (err) {
+        console.error("Failed to load favorite team:", err);
+      }
 
       // Map through the backend results and dynamically mark the followed team as highlighted
-      const updatedTableData = (tableResult || []).map((team: LeagueTeam) => ({
-        ...team,
-        // Match either full name (Chelsea FC) or short name (Chelsea)
-        highlighted: team.name === userFollowedTeam || team.name.includes(userFollowedTeam)
-      }));
+      const updatedTableData = (tableResult || []).map((team: LeagueTeam) => {
+        // If the user hasn't selected a team yet, don't highlight anything
+        if (!userFollowedTeam) {
+          return { ...team, highlighted: false };
+        }
+
+        // Clean up names for a match (e.g. "Chelsea FC" matches "Chelsea")
+        const teamNameLower = team.name.toLowerCase();
+        const userTeamLower = userFollowedTeam.toLowerCase();
+
+        return {
+          ...team,
+          highlighted: 
+            teamNameLower === userTeamLower || 
+            teamNameLower.includes(userTeamLower) || 
+            userTeamLower.includes(teamNameLower)
+        };
+      });
 
       setTableData(updatedTableData);
 
@@ -839,7 +865,7 @@ export default function StatsGallery() {
             >
               <span className="w-8 text-[9px] tracking-widest text-muted-foreground/50 uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Pos</span>
               <span className="flex-1 text-[9px] tracking-widest text-muted-foreground/50 uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Club</span>
-              <div className="hidden md:flex items-center gap-4">
+              <div className="hidden md:flex items-center gap-4 flex-shrink-0">
                 {["P", "W", "D", "L", "GD"].map((h) => (
                   <span key={h} className="w-7 text-center text-[9px] tracking-widest text-muted-foreground/50 uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{h}</span>
                 ))}

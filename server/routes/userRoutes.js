@@ -30,6 +30,39 @@ router.get("/profile", authMiddleware, async (req, res) => {
     }
 });
 
+// Route to update Profile details
+router.put("/profile", authMiddleware, async (req, res) => {
+    try {
+      const userId = req.user.id; // Or req.user._id, depending on your auth setup
+      const { firstName, lastName, username, email, favoriteTeam } = req.body;
+  
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { firstName, lastName, username, email, favoriteTeam },
+        { new: true, runValidators: true }
+      );
+  
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+  
+      // Return the EXACT object format the frontend ProfileData interface expects!
+      res.json({
+        username: updatedUser.username,
+        email: updatedUser.email,
+        firstName: updatedUser.firstName || "",
+        lastName: updatedUser.lastName || "",
+        favoriteTeam: updatedUser.favoriteTeam || "",
+        memberSince: updatedUser.createdAt,
+        emailNotifications: updatedUser.emailNotifications || false,
+        reminderNotifications: updatedUser.reminderNotifications || false
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
 // Route to get Stats
 router.get("/stats", authMiddleware, async (req, res) => {
     try {
