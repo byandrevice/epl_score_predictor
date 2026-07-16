@@ -1,27 +1,24 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { CheckCircle2, XCircle, MinusCircle, Star, Zap, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { CheckCircle2, XCircle, MinusCircle, Star, Zap, TrendingUp, TrendingDown, Minus, ChevronDown } from "lucide-react";
 
 // ─── Types matching predictionController.getStats()'s response exactly ───
 type PredictionResult = "correct_score" | "correct_outcome" | "wrong";
 
-
-interface LeagueTeam {
-  _id?: string;   
-  pos: number;
-  name: string;
-  short: string;
-  crest: string;
-  played: number;
-  won: number;
-  drawn: number;
-  lost: number;
-  gf: number;
-  ga: number;
-  gd: number;
-  pts: number;
-  form: FormResult[];
-  trend: "up" | "down" | "same";
-  highlighted?: boolean; 
+interface PredictionCard {
+  id: string;
+  homeTeam: string;
+  awayTeam: string;
+  homeCrest: string;
+  awayCrest: string;
+  finalHome: number;
+  finalAway: number;
+  predHome: number;
+  predAway: number;
+  result: PredictionResult;
+  points: number;
+  matchDate: string;
+  venue?: string;
+  week: string; // needed to group cards by gameweek when activeFilter === "All"
 }
 
 interface StatsSummary {
@@ -41,6 +38,7 @@ interface StatsResponse {
 type FormResult = "W" | "D" | "L";
 
 interface LeagueTeam {
+  _id?: string;
   pos: number;
   name: string;
   short: string;
@@ -521,6 +519,16 @@ export default function StatsGallery() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [collapsedWeeks, setCollapsedWeeks] = useState<Set<string>>(new Set());
+
+  const toggleWeek = (week: string) => {
+    setCollapsedWeeks((prev) => {
+      const next = new Set(prev);
+      next.has(week) ? next.delete(week) : next.add(week);
+      return next;
+    });
+  };
+
   useEffect(() => {
   let cancelled = false;
 
@@ -613,6 +621,30 @@ export default function StatsGallery() {
     });
   }, [predictions, activeTab]);
 
+  const groupedByWeek = useMemo(() => {
+    if (activeFilter !== "All") return null;
+  
+    const groups: Record<string, PredictionCard[]> = {};
+    filtered.forEach((card) => {
+      if (!groups[card.week]) groups[card.week] = [];
+      groups[card.week].push(card);
+    });
+  
+    // Most recent gameweek first
+    return Object.entries(groups).sort(([a], [b]) => {
+      const numA = parseInt(a.replace(/\D/g, ""), 10) || 0;
+      const numB = parseInt(b.replace(/\D/g, ""), 10) || 0;
+      return numB - numA;
+    });
+  }, [filtered, activeFilter]);
+
+  const allCollapsed = groupedByWeek ? groupedByWeek.every(([week]) => collapsedWeeks.has(week)) : false;
+
+  const toggleAll = () => {
+    if (!groupedByWeek) return;
+    setCollapsedWeeks(allCollapsed ? new Set() : new Set(groupedByWeek.map(([week]) => week)));
+  };
+
   return (
     <div
       className="min-h-full"
@@ -699,7 +731,18 @@ export default function StatsGallery() {
         {/* ── Section 1: Prediction Cards ─────────────────────────────── */}
         <section className="mb-14">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-            <SectionLabel>Prediction Results</SectionLabel>
+            <div className="flex items-center gap-4">
+              <SectionLabel>Prediction Results</SectionLabel>
+              {activeFilter === "All" && groupedByWeek && groupedByWeek.length > 0 && (
+                <button
+                  onClick={toggleAll}
+                  className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
+                  style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.1em" }}
+                >
+                  {allCollapsed ? "Expand All" : "Collapse All"}
+                </button>
+              )}
+            </div>
 
             {/* Combined filters toolbar */}
             <div className="flex flex-wrap items-center gap-2">
@@ -798,9 +841,45 @@ export default function StatsGallery() {
             <div className="py-20 text-center text-xs text-destructive border border-dashed border-border rounded-lg font-mono uppercase">
               {error}
             </div>
-          ) : filtered.length === 0 ? (
-            <div className="py-20 text-center text-xs text-muted-foreground border border-dashed border-border rounded-lg font-mono uppercase">
-              No predictions in this category yet.
+          ) : activeFilter === "All" && groupedByWeek ? (
+            <div className="flex flex-col gap-8">
+              {groupedByWeek.map(([week, cards]) => {
+                const isCollapsed = collapsedWeeks.has(week);
+                return (
+                  <div key={week}>
+                    <button
+                      onClick={() => toggleWeek(week)}
+                      className="flex items-center gap-3 mb-3 w-full text-left"
+                    >
+                      <ChevronDown
+                        size={13}
+                        className="text-muted-foreground transition-transform flex-shrink-0"
+                        style={{ transform: isCollapsed ? "rotate(-90deg)" : "rotate(0deg)" }}
+                      />
+                      <span
+                        className="text-xs font-bold tracking-widest uppercase text-primary"
+                        style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}
+                      >
+                        {week}
+                      </span>
+                      <div className="flex-1 h-px bg-border" />
+                      <span
+                        className="text-[9px] tracking-widest uppercase text-muted-foreground"
+                        style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                      >
+                        {cards.length} {cards.length === 1 ? "match" : "matches"}
+                      </span>
+                    </button>
+                    {!isCollapsed && (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {cards.map((card) => (
+                          <PredictionOutcomeCard key={card.id} card={card} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

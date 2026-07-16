@@ -25,6 +25,46 @@ interface Fixture {
   predicted: boolean; // Flag evaluating if the active profile has entry row values saved for this item
   predictedHomeScore?: string | number;
   predictedAwayScore?: string | number;
+  locked?: boolean;
+}
+
+// --- Date helpers for the Gameweek info strip + Deadline panel ---
+function formatGameweekRange(fixtures: Fixture[]): string {
+  if (fixtures.length === 0) return "No fixtures scheduled";
+
+  const dates = fixtures
+    .map((f) => new Date(`${f.date}T${f.time || "00:00"}:00`))
+    .sort((a, b) => a.getTime() - b.getTime());
+
+  const start = dates[0];
+  const end = dates[dates.length - 1];
+  const year = start.getFullYear();
+  const startMonth = start.toLocaleDateString("en-GB", { month: "short" });
+  const endMonth = end.toLocaleDateString("en-GB", { month: "short" });
+
+  if (start.toDateString() === end.toDateString()) {
+    return `${startMonth} ${start.getDate()}, ${year}`;
+  }
+  if (startMonth === endMonth) {
+    return `${startMonth} ${start.getDate()}–${end.getDate()}, ${year}`;
+  }
+  return `${startMonth} ${start.getDate()} – ${endMonth} ${end.getDate()}, ${year}`;
+}
+
+function getNextDeadline(fixtures: Fixture[]): string | null {
+  const upcoming = fixtures
+    .filter((f) => !f.locked)
+    .map((f) => new Date(`${f.date}T${f.time || "00:00"}:00`))
+    .filter((d) => !isNaN(d.getTime()))
+    .sort((a, b) => a.getTime() - b.getTime());
+
+  if (upcoming.length === 0) return null;
+
+  const d = upcoming[0];
+  const weekday = d.toLocaleDateString("en-GB", { weekday: "short" });
+  const month = d.toLocaleDateString("en-GB", { month: "short" });
+  const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
+  return `${weekday} ${d.getDate()} ${month} · ${time}`;
 }
 
 interface LeaderboardUser {
@@ -268,7 +308,7 @@ export default function FixturesPage() {
           <div className="flex items-center gap-3 mb-4">
             <Calendar size={12} className="text-muted-foreground" />
             <span className="text-[10px] tracking-widest text-muted-foreground uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-              Gameweek 38 · Jul 5–7, 2025
+              {activeFilter === "All" ? "All Gameweeks" : `Gameweek ${activeFilter.replace("GW", "")}`} · {formatGameweekRange(fixtures)}
             </span>
             <div className="flex-1 h-px bg-border" />
             <span className="text-[10px] tracking-widest text-muted-foreground" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
@@ -290,7 +330,7 @@ export default function FixturesPage() {
         </section>
 
         {/* Sidebar Panel containing Leaderboards, Stats, and Deadline Countdown */}
-        <SidebarPanels leaderboard={leaderboard} userStats={userStats} fixtures={fixtures} />
+        <SidebarPanels leaderboard={leaderboard} userStats={userStats} fixtures={fixtures} activeFilter={activeFilter} />
       </div>
     </div>
   );
@@ -408,7 +448,7 @@ function FixtureCard({ fixture, navigate, selectedYear }: { fixture: Fixture; na
 }
 
 // --- Unified Sidebar incorporating Leaderboards, Stats panels, and Deadlines ---
-function SidebarPanels({ leaderboard, userStats, fixtures }: { leaderboard: LeaderboardUser[]; userStats: any; fixtures: Fixture[] }) {
+function SidebarPanels({ leaderboard, userStats, fixtures, activeFilter }: { leaderboard: LeaderboardUser[]; userStats: any; fixtures: Fixture[]; activeFilter: string }) {
   const navigate = useNavigate();
 
   const trendIcon = (trend?: string) => {
@@ -499,7 +539,7 @@ function SidebarPanels({ leaderboard, userStats, fixtures }: { leaderboard: Lead
       <div className="bg-card rounded-xl border border-border overflow-hidden">
         <div className="px-5 py-4 border-b border-border">
           <span className="text-sm font-bold tracking-widest uppercase text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}>
-            Your GW38 Stats
+            Your {activeFilter === "All" ? "Season" : activeFilter} Stats
           </span>
         </div>
         <div className="grid grid-cols-2 divide-x divide-y divide-border">
@@ -526,12 +566,21 @@ function SidebarPanels({ leaderboard, userStats, fixtures }: { leaderboard: Lead
             Deadline
           </span>
         </div>
-        <div className="text-2xl font-black text-foreground mb-1" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-          Fri 4 Jul · 19:45
-        </div>
-        <p className="text-xs text-muted-foreground" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
-          Lock in your GW38 predictions before kickoff.
-        </p>
+        {(() => {
+          const deadline = getNextDeadline(fixtures);
+          return (
+            <>
+              <div className="text-2xl font-black text-foreground mb-1" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                {deadline || "No upcoming deadline"}
+              </div>
+              <p className="text-xs text-muted-foreground" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
+                {deadline
+                  ? `Lock in your ${activeFilter === "All" ? "" : activeFilter + " "}predictions before kickoff.`
+                  : "All fixtures in this view are locked."}
+              </p>
+            </>
+          );
+        })()}
       </div>
     </aside>
   );

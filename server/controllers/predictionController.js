@@ -299,7 +299,7 @@ exports.getStats = async (req, res, next) => {
 
     return res.status(200).json({
       summary: { pointsThisGameweek, correctScores, totalPredictions, seasonAccuracy },
-      predictions: results.map(({ week, ...rest }) => rest), // drop internal-only field
+      predictions: results, // drop internal-only field
     });
   } catch (err) {
     next(err);
