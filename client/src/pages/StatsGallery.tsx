@@ -63,7 +63,7 @@ async function fetchLeagueTable(week: string, season: string): Promise<LeagueTea
   const baseUrl = metaEnv?.VITE_API_URL || "http://localhost:5001/api";
   const token = localStorage.getItem("auth_token");
 
-  const queryWeek = week === "All" ? "GW1" : week;
+  const queryWeek = week; // let the backend handle "All" itself
 
   const querySeason = season; 
 

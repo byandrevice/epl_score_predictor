@@ -235,16 +235,25 @@ exports.submitAll = async (req, res, next) => {
 exports.getStats = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const { week } = req.query;
+    const { week, year } = req.query;
 
     const predictions = await Prediction.find({ user: userId }).populate("fixture");
-    const graded = predictions.filter(
-      (p) =>
-        p.fixture &&
-        p.fixture.finalHomeScore !== null &&
-        p.fixture.finalAwayScore !== null &&
-        (!week || p.fixture.week === week) // ← new: only keep the requested GW
-    );
+    const graded = predictions.filter((p) => {
+      if (!p.fixture) return false;
+      if (p.fixture.finalHomeScore === null || p.fixture.finalAwayScore === null) return false;
+      if (week && p.fixture.week !== week) return false;
+
+      if (year) {
+        // Same Aug–Jul season-boundary logic used in fixtureRoutes.js /
+        // predictionController.getPredictFixtures — "year" means season-start year.
+        const kickoffYear = p.fixture.kickoff.getUTCFullYear();
+        const kickoffMonth = p.fixture.kickoff.getUTCMonth(); // 0 = Jan
+        const seasonStartYear = kickoffMonth >= 7 ? kickoffYear : kickoffYear - 1;
+        if (seasonStartYear !== Number(year)) return false;
+      }
+
+      return true;
+    });
 
     const outcome = (h, a) => (h > a ? "HOME" : h < a ? "AWAY" : "DRAW");
 
