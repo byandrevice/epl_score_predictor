@@ -63,10 +63,11 @@ async function fetchLeagueTable(week: string, season: string): Promise<LeagueTea
   const baseUrl = metaEnv?.VITE_API_URL || "http://localhost:5001/api";
   const token = localStorage.getItem("auth_token");
 
-  // If your week is "All", fall back to GW38 or the latest
   const queryWeek = week === "All" ? "GW1" : week;
 
-  const res = await fetch(`${baseUrl}/stats/table?week=${queryWeek}`, {
+  const querySeason = season; 
+
+  const res = await fetch(`${baseUrl}/stats/table?week=${queryWeek}&season=${querySeason}`, {
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -504,8 +505,8 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 export default function StatsGallery() {
   const [activeTab, setActiveTab] = useState<"all" | "correct" | "wrong">("all");
-  const [activeFilter, setActiveFilter] = useState("GW37");
-  const [selectedYear, setSelectedYear] = useState("2026")
+  const [activeFilter, setActiveFilter] = useState("GW1");
+  const [selectedYear, setSelectedYear] = useState("2025")
   
   const [tableData, setTableData] = useState<LeagueTeam[]>([]);
   const [tableLoading, setTableLoading] = useState(true);

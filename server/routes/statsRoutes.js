@@ -83,14 +83,20 @@ router.get("/generate-standings", async (req, res) => {
   }
 });
 
-// Your original /table route remains down here
 router.get('/table', async (req, res) => {
     try {
     const { week, season } = req.query;
     
-    // 1. Set defaults that match exactly what you've generated
     const queryWeek = week || 'GW1';
-    const querySeason = season || '2026'; // Match "2026" default without transforming it
+    
+    // 1. Get raw year or default to '2025'
+    const rawSeason = season || '2025'; 
+    
+    // 2. Format "2025" -> "2025/26" to match saved document schemas
+    let querySeason = rawSeason;
+    if (rawSeason && !rawSeason.includes('/')) {
+        querySeason = `${rawSeason}/${(Number(rawSeason) + 1).toString().slice(-2)}`;
+    }
 
     console.log(`[API] Fetching table for Week: "${queryWeek}" | Season: "${querySeason}"`);
 
@@ -99,7 +105,6 @@ router.get('/table', async (req, res) => {
 
     console.log(`[API] Found ${standings.length} team standings.`);
 
-    // 2. Return an empty array if nothing found so the frontend UI cleans up nicely
     if (!standings || standings.length === 0) {
         return res.status(200).json([]);
     }
