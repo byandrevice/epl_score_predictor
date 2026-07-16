@@ -6,17 +6,23 @@ const Fixture = require("../models/Fixture"); // Required for standings generato
 
 // Now you can safely attach routes to 'router'
 router.get("/generate-standings", async (req, res) => {
-  try {
-    const { week, season } = req.query;
-    const queryWeek = week || "GW1";
-    const querySeason = season || "2025/26";
-
-    // 1. Fetch all played fixtures for this specific week
-    const fixtures = await Fixture.find({ 
-      week: queryWeek,
-      finalHomeScore: { $ne: null },
-      finalAwayScore: { $ne: null }
-    });
+    try {
+      const { week, season } = req.query;
+      const queryWeek = week || "GW1";
+      const querySeason = season || "2025/26";
+  
+      // "2025/26" -> season start year 2025 -> Aug 2025–Jul 2026 window,
+      // same boundary logic used in fixtureRoutes.js / predictionController.js
+      const seasonStartYear = parseInt(querySeason.split("/")[0], 10);
+      const seasonStart = new Date(`${seasonStartYear}-08-01T00:00:00.000Z`);
+      const seasonEnd = new Date(`${seasonStartYear + 1}-08-01T00:00:00.000Z`);
+  
+      const fixtures = await Fixture.find({ 
+        week: queryWeek,
+        kickoff: { $gte: seasonStart, $lt: seasonEnd },
+        finalHomeScore: { $ne: null },
+        finalAwayScore: { $ne: null }
+      });
 
     if (fixtures.length === 0) {
       return res.status(400).json({ message: `No played fixtures found for ${queryWeek}` });
