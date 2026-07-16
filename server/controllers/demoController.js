@@ -67,12 +67,17 @@ exports.setFinalScore = async (req, res) => {
 
     fixture.finalHomeScore = homeScore;
     fixture.finalAwayScore = awayScore;
+    fixture.locked = true; // prevent edits to predictions after grading
 
     await fixture.save();
 
+    // ✅ Automatically calculate points
+    const result = await demoSimulationService.calculatePoints(fixtureId);
+
     res.json({
       success: true,
-      fixture
+      fixture,
+      calculation: result
     });
 
   } catch (error) {

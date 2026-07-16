@@ -34,6 +34,13 @@ exports.submit = async (req, res, next) => {
       { new: true, upsert: true, setDefaultsOnInsert: true}
     );
 
+    if (fixture.finalHomeScore !== null && fixture.finalAwayScore !== null) {
+      const demoSimulationService = require("../services/demoSimulationService");
+      await demoSimulationService.calculatePoints(fixtureId);
+    }
+
+    const updatedPrediction = await Prediction.findById(prediction._id);
+
     return res.status(200).json({
       success: true,
       message: "Prediction saved.",
@@ -206,6 +213,12 @@ exports.submitAll = async (req, res, next) => {
         { user: userId, fixture: matchId, homeScore: home, awayScore: away },
         { new: true, upsert: true, setDefaultsOnInsert: true }
       );
+
+      if (fixture.finalHomeScore !== null && fixture.finalAwayScore !== null) {
+        const demoSimulationService = require("../services/demoSimulationService");
+        await demoSimulationService.calculatePoints(matchId);
+      }
+
       results.push({ matchId, success: true });
     }
 
