@@ -202,7 +202,7 @@ function PredictionOutcomeCard({ card }: { card: PredictionCard }) {
 
   return (
     <div
-      className="relative overflow-hidden rounded-2xl backdrop-blur-sm"
+      className="relative rounded-2xl backdrop-blur-sm"
       style={{
         background: `${cfg.cardBg}, rgba(18,21,18,0.75)`,
         border: `1px solid ${cfg.cardBorder}`,
@@ -470,7 +470,7 @@ function LeagueTableRow({ team, index }: { team: LeagueTeam; index: number }) {
       </div>
 
       {/* Form badges */}
-      <div className="w-28 flex items-center justify-center gap-1 flex-shrink-0">
+      <div className="w-36 flex items-center justify-center gap-1 flex-shrink-0">
         {team.form.map((f, i) => <FormBadge key={i} result={f} />)}
       </div>
 
@@ -871,7 +871,7 @@ export default function StatsGallery() {
                   <span key={h} className="w-7 text-center text-[9px] tracking-widest text-muted-foreground/50 uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{h}</span>
                 ))}
               </div>
-              <span className="text-[9px] tracking-widest text-muted-foreground/50 uppercase w-28 text-center" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Form</span>
+              <span className="inline-block text-[9px] tracking-widest text-muted-foreground/50 uppercase w-36 text-center" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Form</span>
               <span className="text-[9px] tracking-widest text-muted-foreground/50 uppercase w-10 text-right" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Pts</span>
             </div>
 

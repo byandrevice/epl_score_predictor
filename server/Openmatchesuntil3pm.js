@@ -3,8 +3,9 @@
 // Your existing lock check is: fixture.locked || fixture.kickoff.getTime() <= Date.now()
 // So this just sets locked=false and pushes kickoff to 1:00 PM today — no extra cron/relock job needed,
 // it locks itself automatically the moment the clock passes 1:00 PM, same as any real fixture would.
-// MONGO_URI="mongodb+srv://prempredicttree_db_user:YWh8hJ0rLkwyBSez@elppredictor.ybv4kqb.mongodb.net/?appName=elpPredictor" node generateAllStandings.js
+// MONGO_URI="mongodb+srv://prempredicttree_db_user:YWh8hJ0rLkwyBSez@elppredictor.ybv4kqb.mongodb.net/?appName=elpPredictor" node Openmatchesuntil3pm.js
 // Run: node openMatchesUntil1PM.js
+
 
 const mongoose = require("mongoose");
 const Fixture = require("./models/Fixture");
@@ -14,11 +15,11 @@ const MONGO_URI = process.env.MONGO_URI;
 async function run() {
   await mongoose.connect(MONGO_URI);
 
-  const today117PM = new Date();
-  today117PM.setHours(13, 17, 0, 0); // 1:17 PM local server time (13:17)
+  const today353PM = new Date();
+  today353PM.setHours(15, 53, 0, 0); // 3:53 PM local server time (15:53)
 
-  if (today117PM.getTime() <= Date.now()) {
-    console.log("It's already past 1:17 PM today — nothing to open. Adjust the time in this script if needed.");
+  if (today353PM.getTime() <= Date.now()) {
+    console.log("It's already past 3:53 PM today — nothing to open. Adjust the time in this script if needed.");
     await mongoose.disconnect();
     return;
   }
@@ -34,14 +35,14 @@ async function run() {
     {
       $set: {
         locked: false,
-        kickoff: today117PM,
-        date: today117PM.toISOString().slice(0, 10),
+        kickoff: today353PM,
+        date: today353PM.toISOString().slice(0, 10),
       },
     }
   );
 
   console.log(
-    `Opened ${result.modifiedCount} fixtures. They'll auto-lock again at 1:17 PM today.`
+    `Opened ${result.modifiedCount} fixtures. They'll auto-lock again at 3:53 PM today.`
   );
 
   await mongoose.disconnect();
