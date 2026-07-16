@@ -338,7 +338,13 @@ function LoginScreen({ leaderboard, setScreen }: { leaderboard: LeaderboardUser[
           />
           {error && <span className="text-[10px] text-destructive font-mono uppercase tracking-wider">{error}</span>}
           <div className="flex justify-end mt-1">
-            <button type="button" className="text-xs text-primary hover:opacity-80 transition-opacity" style={{ fontFamily: "'DM Sans', sans-serif" }}>Forgot Password?</button>
+            <button
+              type="button"
+              onClick={() => navigate("/forgot-password")}
+              className="text-xs text-primary hover:opacity-80 transition-opacity"
+            >
+              Forgot Password?
+            </button>
           </div>
           <button type="submit" disabled={loading} className="mt-2 w-full py-3.5 bg-primary text-primary-foreground font-bold tracking-widest uppercase text-sm hover:opacity-90 transition-opacity active:scale-[0.99] disabled:opacity-50">
             {loading ? "Verifying..." : "Log In"}

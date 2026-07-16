@@ -3,6 +3,8 @@ import { createBrowserRouter, redirect } from "react-router";
 import DashboardLayout from "../../layouts/DashboardLayout"; 
 
 import AuthPage from "../../pages/AuthPage"; 
+import ForgotPassword from "../../pages/ForgotPassword";
+import ResetPassword from "../../pages/ResetPassword";
 import FixturesPage from "../../pages/FixturesPage";
 import LeaderboardPage from "../../pages/LeaderboardPage"; 
 import PredictPage from "../../pages/PredictPage"; 
@@ -20,6 +22,14 @@ const router = createBrowserRouter([
   {
     path: "/",
     Component: AuthPage,
+  },
+  {
+  path: "/forgot-password",
+  Component: ForgotPassword,
+  },
+  {
+    path: "/reset-password",
+    Component: ResetPassword,
   },
   {
     path: "/dashboard",

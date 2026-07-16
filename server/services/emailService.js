@@ -22,4 +22,17 @@ const sendVerificationEmail = async (email, code) => {
   });
 };
 
-module.exports = { sendVerificationEmail };
+const sendResetPasswordEmail = async (email, code) => {
+  await transporter.sendMail({
+    from: process.env.EMAIL_FROM,
+    to: email,
+    subject: "PremPredict Password Reset",
+    text: `Your password reset code is: ${code}`,
+    html: `
+      <p>Your password reset code is:</p>
+      <h2>${code}</h2>
+    `
+  });
+};
+
+module.exports = { sendVerificationEmail, sendResetPasswordEmail };

@@ -4,7 +4,10 @@
 
 const jwt = require("jsonwebtoken"); // A library for creating and verifying JWTs (JSON Web Tokens)-the "ticket" that proves someone is logged in.
 const User = require("../models/User"); // This file can look up and create user records.
-const { sendVerificationEmail } = require("../services/emailService"); // sendVerificationEmail
+const { 
+  sendVerificationEmail,
+  sendResetPasswordEmail
+} = require("../services/emailService");
 
 function signToken(user) { // Helper function, produces a login token for that user.
                            // When someone logs in successfully you call this function, and it hands back a long encoded string (the JWT).
@@ -199,8 +202,8 @@ exports.forgotPassword = async (req, res) => {
 
     await user.save();
 
-    console.log("Reset Code:", resetCode);
-
+    await sendResetPasswordEmail(email, resetCode);
+    
     res.json({
       success: true,
       message: "Password reset code generated."
