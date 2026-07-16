@@ -121,11 +121,17 @@ export default function ProfilePage() {
       setDraft(updated);
       setEditing(false);
       setSaveConfirmed(true);
+
+      // Save to local storage on successful API update
+      localStorage.setItem("user_data", JSON.stringify(updated));
     } catch (err: any) {
-      // Offline mode save fallback simulation
+      console.warn("Fallback: Saving profile changes locally.", err);
+      // Fallback save locally so it still works offline!
       setProfile(draft);
       setEditing(false);
       setSaveConfirmed(true);
+      
+      localStorage.setItem("user_data", JSON.stringify(draft));
     } finally {
       setSaving(false);
     }
