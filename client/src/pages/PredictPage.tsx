@@ -197,11 +197,12 @@ export default function PredictPage() {
     fetchPredictiveFixtures(true);
   }, [fetchPredictiveFixtures]);
 
-  // ... (handleScoreUpdate and handleSubmitAll remain the same)
-
-  if (loading) {
-    // ... (Loading state remains the same)
-  }
+  // Must run on every render, before any conditional return below — a hook called
+  // only sometimes (e.g. after the `if (error) return`) causes React error #300
+  // ("Rendered fewer hooks than expected") on the render that takes the early exit.
+  const completedCount = useMemo(() => {
+    return matches.filter((m) => m.homeScore !== "" && m.awayScore !== "").length;
+  }, [matches]);
 
   if (error) {
     return (
@@ -267,10 +268,6 @@ export default function PredictPage() {
       setSubmitting(false);
     }
   };
-
-  const completedCount = useMemo(() => {
-    return matches.filter((m) => m.homeScore !== "" && m.awayScore !== "").length;
-  }, [matches]);
 
   const allComplete = matches.length > 0 && completedCount === matches.length;
 
