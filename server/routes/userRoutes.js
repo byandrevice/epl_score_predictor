@@ -194,8 +194,69 @@ router.get("/stats", authMiddleware, async (req, res) => {
     }
 });
 
-router.get("/dashboard-meta", async (req, res) => {
-    res.json({ success: true, message: "Dashboard metadata loaded" });
+function ordinalSuffix(n) {
+    const j = n % 10, k = n % 100;
+    if (j === 1 && k !== 11) return "st";
+    if (j === 2 && k !== 12) return "nd";
+    if (j === 3 && k !== 13) return "rd";
+    return "th";
+}
+
+router.get("/dashboard-meta", authMiddleware, async (req, res) => {
+    try {
+        const Fixture = require("../models/Fixture");
+        const userId = req.user.id;
+
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        // Same "find the next gameweek" pattern used in predictionController.getPredictFixtures
+        const nextFixture = await Fixture.findOne({ kickoff: { $gte: new Date() } }).sort({ kickoff: 1 });
+
+        let gameweekNumber = 0;
+        let gameweekIsOpen = false;
+        let deadlineText = "TBD";
+
+        if (nextFixture) {
+            gameweekNumber = parseInt(nextFixture.week.replace(/\D/g, ""), 10) || 0;
+
+            const weekFixtures = await Fixture.find({ week: nextFixture.week }).sort({ kickoff: 1 });
+            const earliestKickoff = weekFixtures[0]?.kickoff;
+            gameweekIsOpen = earliestKickoff ? earliestKickoff.getTime() > Date.now() : false;
+
+            if (earliestKickoff) {
+                const d = new Date(earliestKickoff);
+                const weekday = d.toLocaleDateString("en-GB", { weekday: "short" });
+                const month = d.toLocaleDateString("en-GB", { month: "short" });
+                const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
+                deadlineText = `${weekday} ${d.getDate()} ${month} · ${time}`;
+            }
+        }
+
+        // Same ranking logic already used by /stats, just reused here
+        const allPredictions = await Prediction.aggregate([
+            { $group: { _id: "$user", totalPoints: { $sum: "$pointsAwarded" } } },
+            { $sort: { totalPoints: -1 } }
+        ]);
+        const rankIndex = allPredictions.findIndex(p => p._id.toString() === userId);
+        const globalRank = rankIndex !== -1 ? `${rankIndex + 1}${ordinalSuffix(rankIndex + 1)}` : "Unranked";
+
+        const initials =
+            ((user.firstName?.[0] || "") + (user.lastName?.[0] || "")).toUpperCase() ||
+            (user.username || "??").slice(0, 2).toUpperCase();
+
+        res.json({
+            username: user.username,
+            avatarInitials: initials,
+            globalRank,
+            gameweekNumber,
+            gameweekIsOpen,
+            deadlineText,
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
 });
 
 module.exports = router;

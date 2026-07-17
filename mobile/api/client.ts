@@ -5,7 +5,7 @@ import axios from 'axios';
  * false once EXPO_PUBLIC_API_URL points at the hosted API, and every screen switches
  * from mock data to real HTTP calls without any other change.
  */
-export const USE_MOCKS = true;
+export const USE_MOCKS = false;
 
 const baseURL = process.env.EXPO_PUBLIC_API_URL ?? '';
 

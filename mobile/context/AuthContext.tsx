@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 
 import { setAuthToken } from '@/api/client';
 
@@ -18,11 +19,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // On app start, restore any saved JWT so the user stays logged in across restarts.
   useEffect(() => {
-    SecureStore.getItemAsync(TOKEN_KEY)
-      .then((saved) => setToken(saved))
-      .finally(() => setIsLoading(false));
+    const loadToken = async () => {
+      try {
+        let saved = null;
+        if (Platform.OS !== 'web') {
+          saved = await SecureStore.getItemAsync(TOKEN_KEY);
+        } else {
+          saved = localStorage.getItem(TOKEN_KEY);
+        }
+        setToken(saved);
+      } catch (e) {
+        console.error("Token load error", e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadToken();
   }, []);
 
   // Keep the axios Authorization header in sync with the current token.
@@ -30,14 +43,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuthToken(token);
   }, [token]);
 
+  // Keep the axios Authorization header in sync with the current token.
+  useEffect(() => {
+    const loadToken = async () => {
+      try {
+        let saved = null;
+        if (Platform.OS !== 'web') {
+          saved = await SecureStore.getItemAsync(TOKEN_KEY);
+        } else {
+          saved = localStorage.getItem(TOKEN_KEY);
+        }
+        setToken(saved);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadToken();
+  }, []);
+  
+  // 2. Updated: Persist token based on platform
   const signIn = (t: string) => {
     setToken(t);
-    SecureStore.setItemAsync(TOKEN_KEY, t); // persist for next launch
+    if (Platform.OS !== 'web') {
+      SecureStore.setItemAsync(TOKEN_KEY, t);
+    } else {
+      localStorage.setItem(TOKEN_KEY, t);
+    }
   };
-
+  
+  // 3. Updated: Remove token based on platform
   const signOut = () => {
     setToken(null);
-    SecureStore.deleteItemAsync(TOKEN_KEY);
+    if (Platform.OS !== 'web') {
+      SecureStore.deleteItemAsync(TOKEN_KEY);
+    } else {
+      localStorage.removeItem(TOKEN_KEY);
+    }
   };
 
   return (
