@@ -503,7 +503,9 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 export default function StatsGallery() {
   const [activeTab, setActiveTab] = useState<"all" | "correct" | "wrong">("all");
-  const [activeFilter, setActiveFilter] = useState("GW1");
+  const [activeFilter, setActiveFilter] = useState(() => {
+    return localStorage.getItem("stats_filter") || "All"; 
+  });
   const [selectedYear, setSelectedYear] = useState("2025")
   
   const [tableData, setTableData] = useState<LeagueTeam[]>([]);
@@ -546,6 +548,15 @@ export default function StatsGallery() {
       if (cancelled) return;
       setSummary(statsData.summary);
       setPredictions(statsData.predictions);
+
+      if (activeFilter === "All") {
+        // Automatically collapse all weeks when "All" is selected
+        const weeks = Array.from(new Set(statsData.predictions.map((p) => p.week)));
+        setCollapsedWeeks(new Set(weeks));
+      } else {
+        // Clear collapsed state if a specific week is selected
+        setCollapsedWeeks(new Set());
+      }
       
       // Fetch dynamic league table standings
       const tableResult = await fetchLeagueTable(activeFilter, selectedYear);
