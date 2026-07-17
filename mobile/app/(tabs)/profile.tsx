@@ -1,24 +1,12 @@
-import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
+import { useEffect, useState } from 'react';
+import { View, Text, Pressable, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 import { Theme, FontFamily } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
-
-// Placeholder profile — swap for a real /user/profile + /user/stats call once the API is live.
-const PROFILE = {
-  firstName: 'Andre',
-  lastName: 'Palau',
-  username: 'andrepalau',
-  email: 'andrepalau91@gmail.com',
-};
-
-const STATS = [
-  { label: 'Global Rank', value: '#4,120' },
-  { label: 'Total Points', value: '210' },
-  { label: 'Accuracy', value: '52%' },
-  { label: 'Exact Scores', value: '14' },
-];
+import { getProfile, getStats } from '@/api/user';
+import type { UserProfile, UserStats } from '@/api/types';
 
 function Detail({ label, value, last }: { label: string; value: string; last?: boolean }) {
   return (
@@ -33,7 +21,47 @@ export default function Profile() {
   const insets = useSafeAreaInsets();
   const { signOut } = useAuth();
 
-  const initials = (PROFILE.firstName[0] ?? 'U').toUpperCase();
+  const [profile, setProfile] = useState<UserProfile>();
+  const [stats, setStats] = useState<UserStats>();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    Promise.all([getProfile(), getStats()])
+      .then(([p, s]) => { setProfile(p); setStats(s); })
+      .catch((e: any) => setError(e?.response?.data?.message ?? 'Could not load profile.'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={[styles.screen, styles.center]}>
+        <ActivityIndicator color={Theme.colors.primary} />
+      </View>
+    );
+  }
+
+  if (error !== '' || !profile || !stats) {
+    return (
+      <View style={[styles.screen, styles.center, { padding: 24, gap: 16 }]}>
+        <Text style={styles.errorText}>{error || 'Could not load profile.'}</Text>
+        <Pressable style={styles.signOut} onPress={signOut}>
+          <Ionicons name="log-out-outline" size={16} color={Theme.colors.destructive} />
+          <Text style={styles.signOutText}>Log Out</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  const initials = (profile.firstName[0] ?? 'U').toUpperCase();
+  const statTiles = [
+    { label: 'Rank', value: typeof stats.rank === 'number' ? `#${stats.rank}` : stats.rank },
+    { label: 'Points', value: String(stats.points) },
+    { label: 'Accuracy', value: stats.accuracy },
+    { label: 'Correct Scores', value: String(stats.correctScores) },
+    { label: 'Streak', value: stats.streak },
+    { label: 'Predictions Made', value: String(stats.predictionsMade) },
+  ];
 
   return (
     <ScrollView
@@ -46,14 +74,14 @@ export default function Profile() {
           <Text style={styles.avatarText}>{initials}</Text>
         </View>
         <View style={styles.heroText}>
-          <Text style={styles.name}>{PROFILE.firstName} {PROFILE.lastName}</Text>
-          <Text style={styles.username}>@{PROFILE.username}</Text>
+          <Text style={styles.name}>{profile.firstName} {profile.lastName}</Text>
+          <Text style={styles.username}>@{profile.username}</Text>
         </View>
       </View>
 
       {/* Stats */}
       <View style={styles.statsGrid}>
-        {STATS.map((s) => (
+        {statTiles.map((s) => (
           <View key={s.label} style={styles.statTile}>
             <Text style={styles.statLabel}>{s.label}</Text>
             <Text style={styles.statValue}>{s.value}</Text>
@@ -64,10 +92,18 @@ export default function Profile() {
       {/* Personal details (read-only) */}
       <Text style={styles.sectionTitle}>Personal Details</Text>
       <View style={styles.card}>
-        <Detail label="First Name" value={PROFILE.firstName} />
-        <Detail label="Last Name" value={PROFILE.lastName} />
-        <Detail label="Username" value={PROFILE.username} />
-        <Detail label="Email" value={PROFILE.email} last />
+        <Detail label="First Name" value={profile.firstName} />
+        <Detail label="Last Name" value={profile.lastName} />
+        <Detail label="Username" value={profile.username} />
+        <Detail label="Email" value={profile.email} />
+        <Detail
+          label="Member Since"
+          value={new Date(profile.memberSince).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
+          last={profile.favoriteTeam === ''}
+        />
+        {profile.favoriteTeam !== '' && (
+          <Detail label="Favorite Team" value={profile.favoriteTeam} last />
+        )}
       </View>
 
       {/* Sign out */}
@@ -81,6 +117,11 @@ export default function Profile() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Theme.colors.background },
+  center: { alignItems: 'center', justifyContent: 'center' },
+  errorText: {
+    color: Theme.colors.destructive, fontSize: 13, textAlign: 'center',
+    fontFamily: FontFamily.mono, textTransform: 'uppercase', letterSpacing: 1,
+  },
 
   hero: {
     flexDirection: 'row', alignItems: 'center', gap: 14,

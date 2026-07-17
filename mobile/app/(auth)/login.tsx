@@ -106,9 +106,9 @@ export default function Login() {
             {/* Error renders only when set — conditional && is the RN idiom for this */}
             {error !== '' && <Text style={styles.error}>{error}</Text>}
 
-            <Pressable style={styles.forgot} onPress={() => { /* TODO: forgot-password flow */ }}>
-              <Text style={styles.forgotText}>Forgot Password?</Text>
-            </Pressable>
+            <Text style={[styles.forgot, styles.forgotText]}>
+              Forgot your password? Reset it on the web app.
+            </Text>
 
             {/* Primary action. Disabled while a request is in flight. */}
             <Pressable

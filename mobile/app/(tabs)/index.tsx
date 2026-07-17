@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import {
   View, Text, FlatList, Pressable, StyleSheet, ActivityIndicator,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 import { Theme, FontFamily } from '@/constants/theme';
 import { getFixtures } from '@/api/fixtures';
+import { getMyPredictions } from '@/api/predictions';
 import type { Fixture } from '@/api/types';
 
 export default function Fixtures() {
@@ -17,10 +19,14 @@ export default function Fixtures() {
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Loads mock fixtures now; hits the real API once USE_MOCKS is off.
   useEffect(() => {
-    getFixtures()
-      .then(setFixtures)
+    // Predictions fetch is best-effort: if it fails (e.g. an expired token),
+    // the fixtures list still renders — it just won't show "already predicted" state.
+    Promise.all([getFixtures(), getMyPredictions().catch(() => [])])
+      .then(([fetchedFixtures, mine]) => {
+        const predictedIds = new Set(mine.map((p) => p.fixtureId));
+        setFixtures(fetchedFixtures.map((f) => ({ ...f, predicted: predictedIds.has(f.id) })));
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -80,7 +86,7 @@ function FixtureCard({ fixture, onPredict }: { fixture: Fixture; onPredict: () =
       {/* Home  VS  Away */}
       <View style={styles.teams}>
         <View style={styles.team}>
-          <Text style={styles.crest}>{fixture.homeCrest}</Text>
+          <Image source={{ uri: fixture.homeLogoUrl }} style={styles.crest} contentFit="contain" />
           <Text style={styles.teamName}>{fixture.home}</Text>
           <Text style={styles.teamShort}>{fixture.homeShort}</Text>
         </View>
@@ -88,7 +94,7 @@ function FixtureCard({ fixture, onPredict }: { fixture: Fixture; onPredict: () =
         <Text style={styles.vs}>VS</Text>
 
         <View style={styles.team}>
-          <Text style={styles.crest}>{fixture.awayCrest}</Text>
+          <Image source={{ uri: fixture.awayLogoUrl }} style={styles.crest} contentFit="contain" />
           <Text style={styles.teamName}>{fixture.away}</Text>
           <Text style={styles.teamShort}>{fixture.awayShort}</Text>
         </View>
@@ -98,7 +104,7 @@ function FixtureCard({ fixture, onPredict }: { fixture: Fixture; onPredict: () =
       <View style={styles.footer}>
         <Text style={styles.venue} numberOfLines={1}>{fixture.venue}</Text>
         <Pressable style={styles.predictBtn} onPress={onPredict}>
-          <Text style={styles.predictText}>Predict Score</Text>
+          <Text style={styles.predictText}>{fixture.predicted ? 'Edit Prediction' : 'Predict Score'}</Text>
           <Ionicons name="chevron-forward" size={12} color={Theme.colors.primaryForeground} />
         </Pressable>
       </View>
@@ -143,7 +149,10 @@ const styles = StyleSheet.create({
 
   teams: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 16 },
   team: { flex: 1, alignItems: 'center', gap: 4 },
-  crest: { fontSize: 28 },
+  crest: {
+    width: 36, height: 36,
+    backgroundColor: Theme.colors.muted, borderRadius: Theme.radius.md,
+  },
   teamName: {
     fontFamily: FontFamily.display, fontSize: 15, color: Theme.colors.foreground, textAlign: 'center',
   },
