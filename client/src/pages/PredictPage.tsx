@@ -159,7 +159,7 @@ export default function PredictPage() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const BACKEND_URL = "http://localhost:5001/api";
+  const BACKEND_URL = (import.meta as any).env?.VITE_API_URL || "http://localhost:5001/api";
   const { expired: deadlinePassed, h: countdownH, m: countdownM, string: countdownStr } = useCountdown(deadline);
   const urgency = !deadlinePassed && countdownH === 0 && countdownM < 30;
 

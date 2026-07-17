@@ -92,7 +92,7 @@ interface StandingRow {
 function LeagueTableWidget() {
   const [table, setTable] = useState<StandingRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const BACKEND_URL = "http://localhost:5001/api";
+  const BACKEND_URL = (import.meta as any).env?.VITE_API_URL || "http://localhost:5001/api";
 
   useEffect(() => {
     fetch(`${BACKEND_URL}/stats/table`)
@@ -151,7 +151,7 @@ export default function FixturesPage() {
   const [userStats, setUserStats] = useState({ rank: "—", points: 0, accuracy: "%" });
   const [loading, setLoading] = useState(true);
 
-  const BACKEND_URL = "http://localhost:5001/api";
+  const BACKEND_URL = (import.meta as any).env?.VITE_API_URL || "http://localhost:5001/api";
 
   useEffect(() => {
     async function fetchDashboardData() {
