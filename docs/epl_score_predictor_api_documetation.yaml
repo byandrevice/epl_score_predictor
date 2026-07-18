@@ -21,7 +21,10 @@ tags:
     description: Match fixtures
 
   - name: Predictions
-    description: Match predictions
+    description: >
+      Match predictions. Note: every endpoint below is also mounted at
+      `/api/predict/*` (e.g. `/api/predict/fixtures`) — same router, second
+      mount point used by the web client's PredictPage.
 
   - name: Leaderboard
     description: Ranking system
@@ -31,6 +34,9 @@ tags:
 
   - name: Teams
     description: Team information
+
+  - name: Stats
+    description: League standings / table generation
 
   - name: System
     description: API health checks
@@ -266,6 +272,64 @@ paths:
         "401":
           description: Unauthorized
 
+    put:
+      tags:
+        - User
+      summary: Update user profile
+      description: Updates the logged-in user's editable profile fields. Also used to opt in/out of a public prediction history via `predictionsPublic`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                  example: John
+                lastName:
+                  type: string
+                  example: Smith
+                username:
+                  type: string
+                  example: john123
+                email:
+                  type: string
+                  example: john@gmail.com
+                favoriteTeam:
+                  type: string
+                  example: Arsenal
+                emailNotifications:
+                  type: boolean
+                  example: true
+                reminderNotifications:
+                  type: boolean
+                  example: true
+                predictionsPublic:
+                  type: boolean
+                  example: false
+      responses:
+        "200":
+          description: Profile updated successfully
+          content:
+            application/json:
+              example:
+                username: john123
+                firstName: John
+                lastName: Smith
+                email: john@gmail.com
+                favoriteTeam: Arsenal
+                emailNotifications: true
+                reminderNotifications: true
+                predictionsPublic: false
+                memberSince: "2026-01-10T12:00:00.000Z"
+        "401":
+          description: Unauthorized
+        "404":
+          description: User not found
+
 
   /api/user/stats:
     get:
@@ -294,14 +358,77 @@ paths:
       tags:
         - User
       summary: Get dashboard metadata
+      description: Returns the logged-in user's avatar initials, global rank, and current gameweek deadline info.
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: Dashboard metadata loaded
           content:
             application/json:
               example:
-                success: true
-                message: Dashboard metadata loaded
+                username: john123
+                avatarInitials: JS
+                globalRank: 1st
+                gameweekNumber: 1
+                gameweekIsOpen: true
+                deadlineText: "Fri 15 Aug · 15:00"
+        "401":
+          description: Unauthorized
+
+
+  /api/user/{userId}/public:
+    get:
+      tags:
+        - User
+      summary: Get another user's public profile
+      description: Returns a predictor's rank, points, and accuracy (used from the leaderboard). Their graded prediction history is only included if they've opted into `predictionsPublic`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: 65abc123
+      responses:
+        "200":
+          description: Public profile returned
+          content:
+            application/json:
+              example:
+                userId: "65abc123"
+                username: john123
+                firstName: John
+                lastName: Smith
+                favoriteTeam: Arsenal
+                memberSince: "2026-01-10T12:00:00.000Z"
+                rank: 1
+                points: 50
+                accuracy: "80%"
+                predictionsMade: 10
+                correctScores: 4
+                predictionsPublic: true
+                predictions:
+                  - id: "789abc"
+                    homeTeam: Arsenal
+                    awayTeam: Chelsea
+                    homeCrest: ""
+                    awayCrest: ""
+                    finalHome: 2
+                    finalAway: 1
+                    predHome: 2
+                    predAway: 1
+                    result: correct_score
+                    points: 5
+                    matchDate: "2026-08-15T15:00:00Z"
+        "400":
+          description: Invalid user id
+        "401":
+          description: Unauthorized
+        "404":
+          description: User not found
 
 
   /api/fixtures:
@@ -331,8 +458,8 @@ paths:
                   predicted: true
                   predictedHomeScore: 2
                   predictedAwayScore: 1
-                  "401": 
-                    description: Unauthorized
+        "401":
+          description: Unauthorized
 
 
   /api/fixtures/upcoming:
@@ -382,6 +509,29 @@ paths:
           description: Invalid fixture ID
         "404":
           description: Fixture not found
+
+
+  /api/fixtures/sync:
+    post:
+      tags:
+        - Fixtures
+      summary: Sync fixtures from football-data.org
+      description: >
+        Internal/admin endpoint. Pulls current Premier League fixtures from the
+        football-data.org API and upserts them into the database. Not intended
+        for use by the client apps.
+      responses:
+        "200":
+          description: Fixtures synced successfully
+          content:
+            application/json:
+              example:
+                success: true
+                results:
+                  created: 10
+                  updated: 5
+        "500":
+          description: Sync failed (e.g. upstream API error)
 
 
 
@@ -742,6 +892,105 @@ paths:
         "404":
           description: Club record not found
 
+
+
+  /api/stats/table:
+    get:
+      tags:
+        - Stats
+      summary: Get league standings table
+      description: >
+        Returns the standings table for a given gameweek/season, or the
+        cumulative season table when `week=All` (computed on the fly from
+        every played fixture rather than a saved snapshot).
+      parameters:
+        - name: week
+          in: query
+          required: false
+          schema:
+            type: string
+          example: GW1
+          description: Gameweek label, or "All" for the cumulative season table.
+        - name: season
+          in: query
+          required: false
+          schema:
+            type: string
+          example: "2025/26"
+      responses:
+        "200":
+          description: Standings table returned (empty array if none saved yet)
+          content:
+            application/json:
+              example:
+                - _id: "65f123abc456"
+                  pos: 1
+                  name: Arsenal
+                  short: ARS
+                  crest: "⚽"
+                  played: 10
+                  won: 8
+                  drawn: 1
+                  lost: 1
+                  gf: 22
+                  ga: 8
+                  gd: 14
+                  pts: 25
+                  form: ["W", "W", "D", "W", "L"]
+                  trend: same
+        "500":
+          description: Server error
+
+
+  /api/stats/generate-standings:
+    get:
+      tags:
+        - Stats
+      summary: Generate and save standings for a gameweek
+      description: >
+        Aggregates all played fixtures for the given gameweek/season, computes
+        each team's record (W/D/L, goal difference, points), and saves the
+        result to the Standing collection. Overwrites any existing snapshot
+        for that week/season.
+      parameters:
+        - name: week
+          in: query
+          required: false
+          schema:
+            type: string
+          example: GW1
+        - name: season
+          in: query
+          required: false
+          schema:
+            type: string
+          example: "2025/26"
+      responses:
+        "200":
+          description: Standings generated and saved
+          content:
+            application/json:
+              example:
+                success: true
+                message: "Successfully compiled and saved standings for GW1!"
+                data:
+                  - teamName: Arsenal
+                    crest: "⚽"
+                    played: 10
+                    won: 8
+                    drawn: 1
+                    lost: 1
+                    gf: 22
+                    ga: 8
+                    gd: 14
+                    pts: 25
+                    form: ["W", "W", "D", "W", "L"]
+                    week: GW1
+                    season: "2025/26"
+        "400":
+          description: No played fixtures found for that gameweek
+        "500":
+          description: Server error
 
 
   /api/health:
