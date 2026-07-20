@@ -3,6 +3,7 @@ import {
   View, Text, TextInput, Pressable, StyleSheet,
   ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,7 +27,7 @@ export default function Predict() {
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    getFixture(Number(fixtureId))
+    getFixture(fixtureId)
       .then(setFixture)
       .finally(() => setLoading(false));
   }, [fixtureId]);
@@ -44,8 +45,7 @@ export default function Predict() {
 
     setSubmitting(true);
     try {
-      // userId is a placeholder for now; comes from the logged-in user once the API is live.
-      const res = await submitPrediction({ userId: 'guest', fixtureId: fixture.id, homeScore, awayScore });
+      const res = await submitPrediction({ fixtureId: fixture.id, homeScore, awayScore });
       if (res.success) setSuccess(res.message ?? 'Prediction saved.');
       else setError(res.message ?? 'Could not save prediction.');
     } catch (e: any) {
@@ -101,7 +101,7 @@ export default function Predict() {
         <View style={styles.card}>
           <View style={styles.teams}>
             <View style={styles.team}>
-              <Text style={styles.crest}>{fixture.homeCrest}</Text>
+              <Image source={{ uri: fixture.homeLogoUrl }} style={styles.crest} contentFit="contain" />
               <Text style={styles.teamName}>{fixture.home}</Text>
               <Text style={styles.teamShort}>{fixture.homeShort}</Text>
               <TextInput
@@ -118,7 +118,7 @@ export default function Predict() {
             <Text style={styles.vs}>VS</Text>
 
             <View style={styles.team}>
-              <Text style={styles.crest}>{fixture.awayCrest}</Text>
+              <Image source={{ uri: fixture.awayLogoUrl }} style={styles.crest} contentFit="contain" />
               <Text style={styles.teamName}>{fixture.away}</Text>
               <Text style={styles.teamShort}>{fixture.awayShort}</Text>
               <TextInput
@@ -178,7 +178,10 @@ const styles = StyleSheet.create({
   },
   teams: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   team: { flex: 1, alignItems: 'center', gap: 8 },
-  crest: { fontSize: 32 },
+  crest: {
+    width: 40, height: 40,
+    backgroundColor: Theme.colors.muted, borderRadius: Theme.radius.md,
+  },
   teamName: { fontFamily: FontFamily.display, fontSize: 15, color: Theme.colors.foreground, textAlign: 'center' },
   teamShort: { fontFamily: FontFamily.mono, fontSize: 10, color: Theme.colors.mutedForeground, letterSpacing: 1 },
   vs: { fontFamily: FontFamily.display, fontSize: 18, color: Theme.colors.mutedForeground, paddingHorizontal: 8 },

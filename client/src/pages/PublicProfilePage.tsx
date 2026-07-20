@@ -70,7 +70,7 @@ export default function PublicProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const BACKEND_URL = "http://localhost:5001/api";
+  const BACKEND_URL = (import.meta as any).env?.VITE_API_URL || "http://localhost:5001/api";
 
   useEffect(() => {
     async function fetchProfile() {

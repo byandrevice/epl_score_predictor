@@ -49,7 +49,9 @@ export default function Register() {
     try {
       const res = await register({ firstName, lastName, username, email, password });
       if (res.success) {
-        setSuccess(res.message ?? 'Account created. Please log in.');
+        setSuccess(
+          `${res.message ?? 'Account created.'} Verification currently happens on the web app — once verified, come back here to log in.`
+        );
       } else {
         setError(res.message ?? 'Registration failed.');
       }

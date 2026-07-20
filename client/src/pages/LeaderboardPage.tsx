@@ -77,7 +77,7 @@ export default function LeaderboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const BACKEND_URL = "http://localhost:5001/api";
+  const BACKEND_URL = (import.meta as any).env?.VITE_API_URL || "http://localhost:5001/api";
 
   // --- 1. Fetch leaderboard for the selected scope ---
   useEffect(() => {

@@ -57,7 +57,7 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [saveConfirmed, setSaveConfirmed] = useState(false);
 
-  const BACKEND_URL = "http://localhost:5001/api";
+  const BACKEND_URL = (import.meta as any).env?.VITE_API_URL || "http://localhost:5001/api";
 
   // --- 1. Fetch user account profile configurations ---
   // --- 1. Fetch user account profile configurations ---
