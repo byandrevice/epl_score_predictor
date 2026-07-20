@@ -34,7 +34,7 @@ function NavBar({ screen, setScreen }: { screen: Screen; setScreen: (s: Screen) 
         <div className="flex items-center gap-3">
           <button
             onClick={() => setScreen("login")}
-            className="text-xs tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
+            className="text-xs tracking-widest uppercase text-foreground/80 hover:text-foreground transition-colors"
             style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
           >
             Log In
@@ -53,7 +53,7 @@ function NavBar({ screen, setScreen }: { screen: Screen; setScreen: (s: Screen) 
       {showBack && (
         <button
           onClick={() => setScreen("landing")}
-          className="text-xs tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
+          className="text-xs tracking-widest uppercase text-foreground/80 hover:text-foreground transition-colors"
           style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
         >
           ← Back
@@ -106,7 +106,7 @@ function MatchCard({ match }: { match: Match }) {
  */
 function LeaderboardWidget({ leaderboard, setScreen }: { leaderboard: LeaderboardUser[]; setScreen: (s: Screen) => void }) {
   if (!Array.isArray(leaderboard)) {
-    return <div className="text-muted-foreground text-xs">No leaderboard data available.</div>;
+    return <div className="text-foreground/80 text-xs">No leaderboard data available.</div>;
   }
   return (
     <div className="bg-card border border-border overflow-hidden">
@@ -125,12 +125,12 @@ function LeaderboardWidget({ leaderboard, setScreen }: { leaderboard: Leaderboar
       <div className="divide-y divide-border">
         {leaderboard.map((user) => (
           <div key={user.rank} className="px-5 py-2.5 flex items-center gap-3">
-            <span className={`text-xs font-bold w-5 text-center flex-shrink-0 ${user.rank === 1 ? "text-primary" : "text-muted-foreground"}`} style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+            <span className={`text-xs font-bold w-5 text-center flex-shrink-0 ${user.rank === 1 ? "text-primary" : "text-foreground/80"}`} style={{ fontFamily: "'JetBrains Mono', monospace" }}>
               {user.rank === 1 ? "01" : `0${user.rank}`}
             </span>
             <span className="flex-1 text-sm text-foreground font-medium tracking-wide" style={{ fontFamily: "'DM Sans', sans-serif" }}>{user.name}</span>
             <div className="flex items-center gap-3">
-              <span className="text-[10px] text-muted-foreground tracking-wider" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{user.accuracy}</span>
+              <span className="text-[10px] text-foreground/70 tracking-wider" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{user.accuracy}</span>
               <span className={`text-xs font-semibold ${user.rank === 1 ? "text-primary" : "text-foreground"}`} style={{ fontFamily: "'JetBrains Mono', monospace" }}>{user.pts.toLocaleString()}</span>
             </div>
           </div>
@@ -139,7 +139,7 @@ function LeaderboardWidget({ leaderboard, setScreen }: { leaderboard: Leaderboar
 
       {/* Bottom CTA footer link */}
       <div className="px-5 py-3 bg-muted/20 border-t border-border">
-        <button onClick={() => setScreen("register")} className="w-full text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors text-center" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+        <button onClick={() => setScreen("register")} className="w-full text-[10px] tracking-widest uppercase text-foreground/80 hover:text-foreground transition-colors text-center" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
           Sign up to claim your spot
         </button>
       </div>
@@ -167,7 +167,7 @@ function LandingScreen({ matches, leaderboard, setScreen }: { matches: Match[]; 
             Predict the <span className="text-primary">Premier</span><br />
             League. <span className="relative inline-block" style={{ WebkitTextStroke: "1px rgba(57,255,20,0.4)", color: "transparent" }}>Claim</span> the<br />Leaderboard.
           </h1>
-          <p className="text-base md:text-lg text-muted-foreground max-w-md mb-10 leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
+          <p className="text-base md:text-lg text-foreground/80 max-w-md mb-10 leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
             Predict every EPL fixture. Earn points for accuracy. Rise through the global ranks. Weekly prizes for the sharpest football minds.
           </p>
           <div className="flex flex-wrap items-center gap-4">
@@ -183,7 +183,7 @@ function LandingScreen({ matches, leaderboard, setScreen }: { matches: Match[]; 
             {[["48K+", "Active Predictors"], ["£10K", "Monthly Prize Pool"], ["380", "Fixtures / Season"]].map(([num, label]) => (
               <div key={label} className="flex items-baseline gap-2">
                 <span className="text-2xl font-black text-primary" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>{num}</span>
-                <span className="text-xs text-muted-foreground tracking-wider uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{label}</span>
+                <span className="text-xs text-foreground/80 tracking-wider uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{label}</span>
               </div>
             ))}
           </div>
@@ -197,12 +197,12 @@ function LandingScreen({ matches, leaderboard, setScreen }: { matches: Match[]; 
             <div className="w-1 h-5 bg-primary" />
             <h2 className="text-xl font-bold tracking-widest uppercase text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}>Upcoming Fixtures</h2>
           </div>
-          <span className="text-[10px] tracking-widest text-muted-foreground uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>GW38 · Live Feed</span>
+          <span className="text-[10px] tracking-widest text-foreground/80 uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>GW38 · Live Feed</span>
         </div>
         
         {/* Loading state or match cards mapping */}
         {matches.length === 0 ? (
-          <div className="py-10 text-center text-xs text-muted-foreground animate-pulse font-mono uppercase">Syncing Live Fixtures...</div>
+          <div className="py-10 text-center text-xs text-foreground/80 animate-pulse font-mono uppercase">Syncing Live Fixtures...</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
             {matches.slice(0, 3).map((m) => <MatchCard key={m.id} match={m} />)}
@@ -223,7 +223,7 @@ function LandingScreen({ matches, leaderboard, setScreen }: { matches: Match[]; 
               <div className="text-4xl md:text-5xl font-black text-foreground uppercase leading-tight mb-4" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
                 Every Goal.<br /><span className="text-primary">Every Point.</span><br />Your Reputation.
               </div>
-              <p className="text-muted-foreground text-sm leading-relaxed max-w-sm" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
+              <p className="text-foreground/80 text-sm leading-relaxed max-w-sm" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
                 Make predictions before kickoff, score points based on accuracy — exact scores, correct outcomes, goal margins. Track your position in real-time against the world.
               </p>
             </div>
@@ -238,9 +238,9 @@ function LandingScreen({ matches, leaderboard, setScreen }: { matches: Match[]; 
       <footer className="border-t border-border px-6 md:px-10 py-6 flex flex-wrap items-center justify-between gap-3 max-w-5xl mx-auto">
         <div className="flex items-center gap-2">
           <Zap size={13} className="text-primary" fill="currentColor" />
-          <span className="text-xs tracking-widest text-muted-foreground uppercase" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>PremPredict © 2025</span>
+          <span className="text-xs tracking-widest text-foreground/80 uppercase" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>PremPredict © 2025</span>
         </div>
-        <span className="text-[10px] text-muted-foreground/50 tracking-widest uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Not affiliated with the Premier League</span>
+        <span className="text-[10px] text-foreground/80 tracking-widest uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Not affiliated with the Premier League</span>
       </footer>
     </main>
   );
@@ -260,14 +260,14 @@ function AuthField({ label, type, placeholder, value, onChange, showToggle }: {
   const inputType = showToggle ? (visible ? "text" : "password") : type;
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[10px] tracking-widest uppercase text-muted-foreground font-semibold" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{label}</label>
+      <label className="text-[10px] tracking-widest uppercase text-foreground/80 font-semibold" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{label}</label>
       <div className="relative">
         <input type={inputType} placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)}
-          className="w-full bg-muted border border-border px-4 py-3 text-foreground text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/20 transition-all"
+          className="w-full bg-muted border border-border px-4 py-3 text-foreground text-sm placeholder:text-foreground/80/50 focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/20 transition-all"
           style={{ fontFamily: "'DM Sans', sans-serif" }} />
         {/* Toggle hide/show icon for password fields */}
         {showToggle && (
-          <button type="button" onClick={() => setVisible((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+          <button type="button" onClick={() => setVisible((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/80 hover:text-foreground transition-colors">
             {visible ? <EyeOff size={15} /> : <Eye size={15} />}
           </button>
         )}
@@ -318,7 +318,7 @@ function LoginScreen({ leaderboard, setScreen }: { leaderboard: LeaderboardUser[
             <div className="w-1 h-6 bg-primary" />
             <span className="text-2xl font-black tracking-widest uppercase text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}>Welcome Back</span>
           </div>
-          <p className="text-sm text-muted-foreground leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>Log in to your account and get back to predicting.</p>
+          <p className="text-sm text-foreground/80 leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>Log in to your account and get back to predicting.</p>
         </div>
         <form className="flex flex-col gap-4" onSubmit={handleLogin}>
           <AuthField 
@@ -351,7 +351,7 @@ function LoginScreen({ leaderboard, setScreen }: { leaderboard: LeaderboardUser[
           </button>
         </form>
         <div className="mt-8 pt-6 border-t border-border text-center">
-          <span className="text-sm text-muted-foreground" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>No account yet? </span>
+          <span className="text-sm text-foreground/80" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>No account yet? </span>
           <button onClick={() => setScreen("register")} className="text-sm text-primary hover:opacity-80 transition-opacity font-medium" style={{ fontFamily: "'DM Sans', sans-serif" }}>Sign up for free</button>
         </div>
         
@@ -363,7 +363,7 @@ function LoginScreen({ leaderboard, setScreen }: { leaderboard: LeaderboardUser[
               <span className="text-[10px] tracking-widest text-primary uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Current leader</span>
             </div>
             <div className="text-sm text-foreground font-semibold" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-              {topUser.name} <span className="text-muted-foreground font-normal">· {topUser.pts.toLocaleString()} pts · {topUser.accuracy} accuracy</span>
+              {topUser.name} <span className="text-foreground/80 font-normal">· {topUser.pts.toLocaleString()} pts · {topUser.accuracy} accuracy</span>
             </div>
           </div>
         )}
@@ -417,7 +417,7 @@ function RegisterScreen({ setScreen, onRegister }: { setScreen: (s: Screen) => v
             <div className="w-1 h-6 bg-primary" />
             <span className="text-2xl font-black tracking-widest uppercase text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}>Create Account</span>
           </div>
-          <p className="text-sm text-muted-foreground leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>Join 48,000+ predictors competing for leaderboard glory this season.</p>
+          <p className="text-sm text-foreground/80 leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>Join 48,000+ predictors competing for leaderboard glory this season.</p>
         </div>
         <form className="flex flex-col gap-4" onSubmit={handleRegister}>
           <div className="grid grid-cols-2 gap-3">
@@ -430,10 +430,10 @@ function RegisterScreen({ setScreen, onRegister }: { setScreen: (s: Screen) => v
           
           {/* Unique explicit confirm password field matching state layout check */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] tracking-widest uppercase text-muted-foreground font-semibold" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Confirm Password</label>
+            <label className="text-[10px] tracking-widest uppercase text-foreground/80 font-semibold" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Confirm Password</label>
             <div className="relative">
               <input type="password" placeholder="repeat password" value={confirm} onChange={(e) => setConfirm(e.target.value)}
-                className={`w-full bg-muted border px-4 py-3 text-foreground text-sm placeholder:text-muted-foreground/50 focus:outline-none transition-all ${!passwordMatch ? "border-destructive focus:border-destructive" : confirm !== "" && password === confirm ? "border-primary/50 focus:border-primary/60 focus:ring-1 focus:ring-primary/20" : "border-border focus:border-primary/60 focus:ring-1 focus:ring-primary/20"}`}
+                className={`w-full bg-muted border px-4 py-3 text-foreground text-sm placeholder:text-foreground/80/50 focus:outline-none transition-all ${!passwordMatch ? "border-destructive focus:border-destructive" : confirm !== "" && password === confirm ? "border-primary/50 focus:border-primary/60 focus:ring-1 focus:ring-primary/20" : "border-border focus:border-primary/60 focus:ring-1 focus:ring-primary/20"}`}
                 style={{ fontFamily: "'DM Sans', sans-serif" }} />
               {confirm !== "" && password === confirm && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-primary text-xs">✓</span>}
             </div>
@@ -451,7 +451,7 @@ function RegisterScreen({ setScreen, onRegister }: { setScreen: (s: Screen) => v
               <div className="w-3.5 h-3.5 mt-0.5 border border-border flex-shrink-0 flex items-center justify-center bg-muted text-[10px] font-bold text-primary transition-colors">
                 {agreed && "X"} {/* 👈 The X appears here when agreed is true! */}
               </div>
-              <span className="text-xs text-muted-foreground leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
+              <span className="text-xs text-foreground/80 leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
                 I agree to the <span className="text-primary hover:opacity-80">Terms of Service</span> and <span className="text-primary hover:opacity-80">Privacy Policy</span>
               </span>
             </label>
@@ -466,14 +466,14 @@ function RegisterScreen({ setScreen, onRegister }: { setScreen: (s: Screen) => v
           </button>
         </form>
         <div className="mt-8 pt-6 border-t border-border text-center">
-          <span className="text-sm text-muted-foreground" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>Already have an account? </span>
+          <span className="text-sm text-foreground/80" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>Already have an account? </span>
           <button onClick={() => setScreen("login")} className="text-sm text-primary hover:opacity-80 transition-opacity font-medium" style={{ fontFamily: "'DM Sans', sans-serif" }}>Log in</button>
         </div>
         <div className="mt-6 grid grid-cols-3 gap-px bg-border">
           {[["Free", "Forever"], ["Live", "Updates"], ["Global", "Rankings"]].map(([top, bot]) => (
             <div key={top} className="bg-card px-3 py-3 text-center">
               <div className="text-sm font-bold text-primary" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>{top}</div>
-              <div className="text-[10px] text-muted-foreground tracking-wider uppercase mt-0.5" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{bot}</div>
+              <div className="text-[10px] text-foreground/80 tracking-wider uppercase mt-0.5" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{bot}</div>
             </div>
           ))}
         </div>
@@ -535,13 +535,13 @@ function VerifyScreen({ email, setScreen }: { email: string; setScreen: (s: Scre
             <div className="w-1 h-6 bg-primary" />
             <span className="text-2xl font-black tracking-widest uppercase text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}>Verify Your Email</span>
           </div>
-          <p className="text-sm text-muted-foreground leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
+          <p className="text-sm text-foreground/80 leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>
             We sent a 6‑digit code to <strong className="text-foreground">{email || "your email"}</strong>. Enter it below to activate your account.
           </p>
         </div>
         <form className="flex flex-col gap-4" onSubmit={handleVerify}>
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] tracking-widest uppercase text-muted-foreground font-semibold" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Verification Code</label>
+            <label className="text-[10px] tracking-widest uppercase text-foreground/80 font-semibold" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Verification Code</label>
             <input
               type="text"
               maxLength={6}
@@ -549,7 +549,7 @@ function VerifyScreen({ email, setScreen }: { email: string; setScreen: (s: Scre
               value={code}
               // Only allows typing numbers and limits length to 6 characters
               onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              className="w-full bg-muted border border-border px-4 py-3 text-foreground text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/20 transition-all text-center tracking-widest font-mono"
+              className="w-full bg-muted border border-border px-4 py-3 text-foreground text-sm placeholder:text-foreground/80/50 focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/20 transition-all text-center tracking-widest font-mono"
               style={{ fontFamily: "'JetBrains Mono', monospace" }}
             />
             {error && <span className="text-[10px] text-destructive tracking-wider">{error}</span>}
@@ -564,7 +564,7 @@ function VerifyScreen({ email, setScreen }: { email: string; setScreen: (s: Scre
           </button>
         </div>
         <div className="mt-8 pt-6 border-t border-border text-center">
-          <button onClick={() => setScreen("login")} className="text-sm text-muted-foreground hover:text-foreground transition-colors" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+          <button onClick={() => setScreen("login")} className="text-sm text-foreground/80 hover:text-foreground transition-colors" style={{ fontFamily: "'DM Sans', sans-serif" }}>
             ← Back to Log In
           </button>
         </div>
