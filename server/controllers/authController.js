@@ -64,9 +64,18 @@ exports.register = async (req, res, next) => {
                        // await tell the code "pause this function right here until the save actually finishes" before moving on to the next line.
                        // Without await, the code might try to respond to the request before the user is actually saved.
     
-    await sendVerificationEmail(email, verificationCode);
+    await user.save();
 
-    return res.status(201).json({ success: true, message: "Account created. Please check your email for the verification code." });
+    try {
+      await sendVerificationEmail(email, verificationCode);
+    } catch (err) {
+      console.error("Failed to send verification email:", err.message);
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Account created. If you do not receive the email, request a new verification code."
+    });
   } catch (err) { // If anything inside try throws an error, grab that error here instead of letting it crash the server.
     next(err); 
     // Handing the caught error off to Express's error-handling middleware(the errorHandler.js file)-which format into a proper JSON error response for the client.
@@ -202,8 +211,12 @@ exports.forgotPassword = async (req, res) => {
 
     await user.save();
 
-    await sendResetPasswordEmail(email, resetCode);
-    
+    try {
+      await sendResetPasswordEmail(email, resetCode);
+    } catch (err) {
+      console.error("Failed to send reset email:", err.message);
+    }
+
     res.json({
       success: true,
       message: "Password reset code generated."
