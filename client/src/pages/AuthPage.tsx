@@ -180,7 +180,7 @@ function LandingScreen({ matches, leaderboard, setScreen }: { matches: Match[]; 
 
           </div>
           <div className="mt-10 flex items-center gap-6 flex-wrap">
-            {[["48K+", "Active Predictors"], ["£10K", "Monthly Prize Pool"], ["380", "Fixtures / Season"]].map(([num, label]) => (
+            {[["4", "Active Predictors"], ["$0", "Monthly Prize Pool"], ["380", "Fixtures / Season"]].map(([num, label]) => (
               <div key={label} className="flex items-baseline gap-2">
                 <span className="text-2xl font-black text-primary" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>{num}</span>
                 <span className="text-xs text-foreground/80 tracking-wider uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{label}</span>
@@ -417,7 +417,7 @@ function RegisterScreen({ setScreen, onRegister }: { setScreen: (s: Screen) => v
             <div className="w-1 h-6 bg-primary" />
             <span className="text-2xl font-black tracking-widest uppercase text-foreground" style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}>Create Account</span>
           </div>
-          <p className="text-sm text-foreground/80 leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>Join 48,000+ predictors competing for leaderboard glory this season.</p>
+          <p className="text-sm text-foreground/80 leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>Join 4 predictors competing for leaderboard glory this season.</p>
         </div>
         <form className="flex flex-col gap-4" onSubmit={handleRegister}>
           <div className="grid grid-cols-2 gap-3">
