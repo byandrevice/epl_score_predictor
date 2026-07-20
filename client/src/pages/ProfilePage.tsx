@@ -16,6 +16,7 @@ import {
   Pencil,
   X,
   Check,
+  AlertTriangle,
 } from "lucide-react";
 
 // --- Types ---
@@ -128,10 +129,7 @@ export default function ProfilePage() {
       setEditing(false);
       setSaveConfirmed(true);
     } catch (err: any) {
-      // Offline mode save fallback simulation
-      setProfile(payload);
-      setEditing(false);
-      setSaveConfirmed(true);
+      setError(err.message || "Could not save your changes. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -230,6 +228,13 @@ export default function ProfilePage() {
         <div className="bg-primary/10 border border-primary/20 text-primary rounded-sm p-3.5 flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
           <Check size={14} />
           <span>Account changes committed successfully.</span>
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-destructive/10 border border-destructive/20 text-destructive rounded-sm p-3.5 flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
+          <AlertTriangle size={14} />
+          <span>{error}</span>
         </div>
       )}
 

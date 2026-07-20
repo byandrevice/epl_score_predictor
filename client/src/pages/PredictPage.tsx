@@ -5,6 +5,7 @@ import {
   Clock,
   Lock,
   ChevronRight,
+  ChevronDown,
   Users,
   CheckCircle2,
   AlertTriangle,
@@ -41,6 +42,8 @@ interface PredictMatch {
   awayLogoUrl?: string;
 }
 
+const INITIAL_VISIBLE_MATCHES = 4;
+
 // --- Countdown hook ---
 function useCountdown(target: string | null) {
   const [now, setNow] = useState(Date.now());
@@ -58,7 +61,7 @@ function useCountdown(target: string | null) {
   const m = Math.floor((delta % (1000 * 60 * 60)) / (1000 * 60));
   const s = Math.floor((delta % (1000 * 60)) / 1000);
 
-  let str = `${h}h ${m}m ${s}s`;
+  const str = h >= 24 ? `${Math.floor(h / 24)}d ${h % 24}h` : `${h}h ${m}m ${s}s`;
   return { expired: false, h, m, s, string: str };
 }
 
@@ -153,6 +156,7 @@ export default function PredictPage() {
   const [gameweek, setGameweek] = useState<string>("Loading..."); // Updated default
   const [deadline, setDeadline] = useState<string | null>(null);
   const [matches, setMatches] = useState<PredictMatch[]>([]);
+  const [showAllMatches, setShowAllMatches] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -369,7 +373,7 @@ export default function PredictPage() {
               className="text-[10px] tracking-widest text-muted-foreground uppercase"
               style={{ fontFamily: "'JetBrains Mono', monospace" }}
             >
-              {gameweek} Active Configuration Profiles
+              {gameweek} Fixtures
             </span>
           </div>
           <h1
@@ -390,13 +394,13 @@ export default function PredictPage() {
         {submitted && (
           <div className="bg-primary/10 border border-primary/20 text-primary rounded-xl p-4 flex items-center gap-3 text-xs font-semibold uppercase tracking-wider">
             <CheckCircle2 size={16} className="flex-shrink-0" />
-            <span>All open picks successfully logged on server database nodes!</span>
+            <span>Predictions submitted successfully!</span>
           </div>
         )}
 
         {/* CORE MATCH CARDS REPEATER GRID LOOP */}
         <div className="flex flex-col gap-8">
-          {matches.map((match) => {
+          {(showAllMatches ? matches : matches.slice(0, INITIAL_VISIBLE_MATCHES)).map((match) => {
             const isLocked = match.locked || deadlinePassed;
             const total = match.community.totalPredictions || 0;
 
@@ -603,6 +607,17 @@ export default function PredictPage() {
           })}
         </div>
 
+        {!showAllMatches && matches.length > INITIAL_VISIBLE_MATCHES && (
+          <button
+            onClick={() => setShowAllMatches(true)}
+            className="flex items-center justify-center gap-2 mx-auto px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-all"
+            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}
+          >
+            Show {matches.length - INITIAL_VISIBLE_MATCHES} More Matches
+            <ChevronDown size={14} />
+          </button>
+        )}
+
         {/* POINT ALLOCATION INDEX SCOREBOX SYSTEM */}
         <div className="grid grid-cols-3 gap-px overflow-hidden rounded-xl bg-white/5 mt-4">
           {[
@@ -624,7 +639,7 @@ export default function PredictPage() {
               <div className="flex items-center gap-2">
                 <Zap size={14} className="text-primary animate-pulse" />
                 <span className="text-xs text-muted-foreground uppercase tracking-wider font-mono">
-                  {allComplete ? "All slates configured" : `${matches.length - completedCount} open configurations remaining`}
+                  {allComplete ? "All predictions made" : `${matches.length - completedCount} predictions remaining`}
                 </span>
               </div>
               
