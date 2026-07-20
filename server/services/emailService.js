@@ -10,6 +10,10 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  // Same ENETUNREACH/IPv6 issue as the Mongo connection: some hosts (e.g.
+  // smtp.gmail.com) resolve to an IPv6 address that Render can't reach
+  // outbound. Force IPv4 for this socket explicitly.
+  family: 4,
 });
 
 const sendVerificationEmail = async (email, code) => {
