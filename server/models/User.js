@@ -18,6 +18,9 @@ const userSchema = new mongoose.Schema(
     // prediction history from their public profile (leaderboard click-through).
     // Defaults to false/private so nothing is exposed until the user allows it.
     predictionsPublic: { type: Boolean, default: false },
+    // Leaderboard rank as of the last time it was computed, used to
+    // derive the up/down/same trend arrow on the next computation.
+    previousRank: { type: Number, default: null },
   }, { timestamps: true });
 
 // Runs automatically right before a document saves.

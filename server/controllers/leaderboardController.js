@@ -24,6 +24,7 @@ exports.getTop = async (req, res, next) => {
             $concat: ["$firstName", " ", "$lastName"] 
           },
           predictionsPublic: { $ifNull: ["$predictionsPublic", false] },
+          previousRank: 1,
           pts: { $ifNull: [{ $sum: "$userPredictions.pointsAwarded" }, 0] },
           accuracy: {
             $cond: {
@@ -71,24 +72,37 @@ exports.getTop = async (req, res, next) => {
     const rankedUsers = leaderboard
     .filter(user => user.name)
     .map((user, index) => {
-      // MOCK LOGIC:
-      // If rank is 1 (index 0), show "up". 
-      // If rank is 2 (index 1), show "down".
-      // All others show "same".
-      let mockTrend = "same";
-      if (index === 0) mockTrend = "up";
-      if (index === 1) mockTrend = "down";
-  
+      const rank = index + 1;
+
+      // Compare against the rank we stored last time we computed the leaderboard.
+      // Lower rank number = better placement, so a decrease in number means "up".
+      let trend = "same";
+      if (typeof user.previousRank === "number") {
+        if (rank < user.previousRank) trend = "up";
+        else if (rank > user.previousRank) trend = "down";
+      }
+
       return {
-        rank: index + 1,
+        rank,
         userId: user._id.toString(),
         name: user.name || "Anonymous",
         pts: user.pts || 0,
         accuracy: user.accuracy || "0%",
-        trend: mockTrend, // Uses the mock logic above
+        trend,
         predictionsPublic: !!user.predictionsPublic,
       };
     });
+
+    // 4b. Persist the newly computed ranks so the *next* request can diff against them.
+    const bulkOps = rankedUsers.map(u => ({
+      updateOne: {
+        filter: { _id: u.userId },
+        update: { $set: { previousRank: u.rank } },
+      },
+    }));
+    if (bulkOps.length > 0) {
+      await User.bulkWrite(bulkOps);
+    }
 
     // 5. Find the current user's profile for the sticky bar
     const currentUserData = rankedUsers.find(u => u.userId === currentUserId) || null;
