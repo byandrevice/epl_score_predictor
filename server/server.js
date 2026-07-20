@@ -1,3 +1,8 @@
+const dns = require("dns");
+// Render's outbound IPv6 routing is unreliable; Gmail's SMTP host resolves to
+// both address families, and picking IPv6 causes ENETUNREACH/timeout on send.
+dns.setDefaultResultOrder("ipv4first");
+
 const dotenv = require("dotenv");
 dotenv.config();
 
