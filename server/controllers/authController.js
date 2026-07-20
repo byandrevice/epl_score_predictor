@@ -64,8 +64,6 @@ exports.register = async (req, res, next) => {
                        // await tell the code "pause this function right here until the save actually finishes" before moving on to the next line.
                        // Without await, the code might try to respond to the request before the user is actually saved.
     
-    await user.save();
-
     try {
       await sendVerificationEmail(email, verificationCode);
     } catch (err) {
@@ -173,8 +171,11 @@ exports.resendCode = async (req, res) => {
 
     await user.save();
 
-    // TODO: send email
-    console.log("Verification Code:", code);
+    try {
+      await sendVerificationEmail(email, code);
+    } catch (err) {
+      console.error("Failed to resend verification email:", err.message);
+    }
 
     res.json({
       success: true,
