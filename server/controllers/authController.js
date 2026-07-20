@@ -139,9 +139,12 @@ exports.verifyEmail = async (req, res) => {
 
     await user.save();
 
+    const token = signToken(user);
+
     res.json({
       success: true,
-      message: "Email verified successfully."
+      message: "Email verified successfully.",
+      token
     });
 
   } catch (err) {
