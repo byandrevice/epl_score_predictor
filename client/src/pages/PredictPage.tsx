@@ -5,7 +5,6 @@ import {
   Clock,
   Lock,
   ChevronRight,
-  ChevronDown,
   Users,
   CheckCircle2,
   AlertTriangle,
@@ -42,8 +41,6 @@ interface PredictMatch {
   awayLogoUrl?: string;
 }
 
-const INITIAL_VISIBLE_MATCHES = 4;
-
 // --- Countdown hook ---
 function useCountdown(target: string | null) {
   const [now, setNow] = useState(Date.now());
@@ -61,7 +58,7 @@ function useCountdown(target: string | null) {
   const m = Math.floor((delta % (1000 * 60 * 60)) / (1000 * 60));
   const s = Math.floor((delta % (1000 * 60)) / 1000);
 
-  const str = h >= 24 ? `${Math.floor(h / 24)}d ${h % 24}h` : `${h}h ${m}m ${s}s`;
+  let str = `${h}h ${m}m ${s}s`;
   return { expired: false, h, m, s, string: str };
 }
 
@@ -156,7 +153,6 @@ export default function PredictPage() {
   const [gameweek, setGameweek] = useState<string>("Loading..."); // Updated default
   const [deadline, setDeadline] = useState<string | null>(null);
   const [matches, setMatches] = useState<PredictMatch[]>([]);
-  const [showAllMatches, setShowAllMatches] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -373,7 +369,7 @@ export default function PredictPage() {
               className="text-[10px] tracking-widest text-muted-foreground uppercase"
               style={{ fontFamily: "'JetBrains Mono', monospace" }}
             >
-              {gameweek} Fixtures
+              {gameweek} Active Configuration Profiles
             </span>
           </div>
           <h1
@@ -394,13 +390,13 @@ export default function PredictPage() {
         {submitted && (
           <div className="bg-primary/10 border border-primary/20 text-primary rounded-xl p-4 flex items-center gap-3 text-xs font-semibold uppercase tracking-wider">
             <CheckCircle2 size={16} className="flex-shrink-0" />
-            <span>Predictions submitted successfully!</span>
+            <span>All open picks successfully logged on server database nodes!</span>
           </div>
         )}
 
         {/* CORE MATCH CARDS REPEATER GRID LOOP */}
         <div className="flex flex-col gap-8">
-          {(showAllMatches ? matches : matches.slice(0, INITIAL_VISIBLE_MATCHES)).map((match) => {
+          {matches.map((match) => {
             const isLocked = match.locked || deadlinePassed;
             const total = match.community.totalPredictions || 0;
 
@@ -607,23 +603,15 @@ export default function PredictPage() {
           })}
         </div>
 
-        {!showAllMatches && matches.length > INITIAL_VISIBLE_MATCHES && (
-          <button
-            onClick={() => setShowAllMatches(true)}
-            className="flex items-center justify-center gap-2 mx-auto px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-all"
-            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}
-          >
-            Show {matches.length - INITIAL_VISIBLE_MATCHES} More Matches
-            <ChevronDown size={14} />
-          </button>
-        )}
-
         {/* POINT ALLOCATION INDEX SCOREBOX SYSTEM */}
-        <div className="grid grid-cols-3 gap-px overflow-hidden rounded-xl bg-white/5 mt-4">
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-px overflow-hidden rounded-xl bg-white/5 mt-4">
           {[
-            { label: "Correct Score", pts: "+3 pts", gradient: "linear-gradient(135deg, rgba(57,255,20,0.08), rgba(34,197,94,0.03))", color: "#39ff14" },
-            { label: "Correct Outcome", pts: "+1 pt", gradient: "linear-gradient(135deg, rgba(251,191,36,0.08), rgba(245,158,11,0.03))", color: "#fbbf24" },
-            { label: "Wrong Guess", pts: "0 pts", gradient: "linear-gradient(135deg, rgba(100,116,139,0.05), rgba(71,85,105,0.02))", color: "#64748b" },
+            { label: "Exact Score", pts: "+7", gradient: "linear-gradient(135deg, rgba(57,255,20,0.08), rgba(34,197,94,0.03))", color: "#39ff14" },
+            { label: "Outcome (±1)", pts: "+3", gradient: "linear-gradient(135deg, rgba(251,191,36,0.08), rgba(245,158,11,0.03))", color: "#fbbf24" },
+            { label: "Outcome (±2)", pts: "+2", gradient: "linear-gradient(135deg, rgba(251,146,60,0.08), rgba(234,88,12,0.03))", color: "#fb923c" },
+            { label: "Outcome (±3+)", pts: "+1", gradient: "linear-gradient(135deg, rgba(96,165,250,0.08), rgba(59,130,246,0.03))", color: "#60a5fa" },
+            { label: "Wrong (close)", pts: "+1", gradient: "linear-gradient(135deg, rgba(148,163,184,0.08), rgba(100,116,139,0.03))", color: "#94a3b8" },
+            { label: "Wrong Guess", pts: "0", gradient: "linear-gradient(135deg, rgba(100,116,139,0.05), rgba(71,85,105,0.02))", color: "#64748b" },
           ].map(({ label, pts, gradient, color }) => (
             <div key={label} className="flex flex-col items-center gap-0.5 py-2 px-1 text-center" style={{ background: gradient }}>
               <span className="text-sm font-black font-condensed" style={{ color }}>{pts}</span>
@@ -639,7 +627,7 @@ export default function PredictPage() {
               <div className="flex items-center gap-2">
                 <Zap size={14} className="text-primary animate-pulse" />
                 <span className="text-xs text-muted-foreground uppercase tracking-wider font-mono">
-                  {allComplete ? "All predictions made" : `${matches.length - completedCount} predictions remaining`}
+                  {allComplete ? "All slates configured" : `${matches.length - completedCount} open configurations remaining`}
                 </span>
               </div>
               

@@ -912,8 +912,11 @@ export default function StatsGallery() {
               Key
             </span>
             {[
-              { gradient: "linear-gradient(135deg, #39ff14, #22c55e)", label: "+3 · Correct Score", textColor: "#030603" },
-              { gradient: "linear-gradient(135deg, #fbbf24, #f59e0b)", label: "+1 · Correct Outcome", textColor: "#1a0e00" },
+              { gradient: "linear-gradient(135deg, #39ff14, #22c55e)", label: "+7 · Exact Score", textColor: "#030603" },
+              { gradient: "linear-gradient(135deg, #fbbf24, #f59e0b)", label: "+3 · Correct Outcome (off by 1)", textColor: "#1a0e00" },
+              { gradient: "linear-gradient(135deg, #fb923c, #ea580c)", label: "+2 · Correct Outcome (off by 2)", textColor: "#1a0e00" },
+              { gradient: "linear-gradient(135deg, #60a5fa, #3b82f6)", label: "+1 · Correct Outcome (off by 3+)", textColor: "#0a1220" },
+              { gradient: "linear-gradient(135deg, #94a3b8, #64748b)", label: "+1 · Wrong Outcome (close)", textColor: "#0a0f14" },
               { gradient: "linear-gradient(135deg, #64748b, #475569)", label: "0 · Wrong Guess", textColor: "#e2e8f0" },
             ].map(({ gradient, label, textColor }) => (
               <div key={label} className="flex items-center gap-2">
