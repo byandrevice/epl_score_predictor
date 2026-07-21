@@ -50,34 +50,59 @@ exports.lockFixture = async (req, res, next) => {
 };
 
 // ------------------------------------
-// Set final score
+// Set final score (multiple fixtures)
 // POST /api/demo/final-score
 // ------------------------------------
 exports.setFinalScore = async (req, res) => {
   try {
-    const { fixtureId, homeScore, awayScore } = req.body;
+    const { matches } = req.body;
 
-    const fixture = await Fixture.findById(fixtureId);
-
-    if (!fixture) {
-      return res.status(404).json({
-        message: "Fixture not found"
+    if (!matches || !Array.isArray(matches)) {
+      return res.status(400).json({
+        message: "matches array is required"
       });
     }
 
-    fixture.finalHomeScore = homeScore;
-    fixture.finalAwayScore = awayScore;
-    fixture.locked = true; // prevent edits to predictions after grading
+    const results = [];
 
-    await fixture.save();
+    for (const match of matches) {
+      const { fixtureId, homeScore, awayScore } = match;
 
-    // ✅ Automatically calculate points
-    const result = await demoSimulationService.calculatePoints(fixtureId);
+      const fixture = await Fixture.findById(fixtureId);
+
+      if (!fixture) {
+        results.push({
+          fixtureId,
+          success: false,
+          message: "Fixture not found"
+        });
+        continue;
+      }
+
+      fixture.finalHomeScore = homeScore;
+      fixture.finalAwayScore = awayScore;
+      fixture.locked = true;
+
+      await fixture.save();
+
+      // Calculate points for this fixture
+      const calculation = await demoSimulationService.calculatePoints(
+        fixtureId
+      );
+
+      results.push({
+        fixtureId,
+        success: true,
+        homeScore,
+        awayScore,
+        calculation
+      });
+    }
 
     res.json({
       success: true,
-      fixture,
-      calculation: result
+      message: "Final scores updated and points calculated",
+      results
     });
 
   } catch (error) {
