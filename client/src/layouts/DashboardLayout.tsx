@@ -27,14 +27,11 @@ export default function DashboardLayout() {
   // Instantly consume real-time layout metrics resolved by routes.tsx
   const data = useLoaderData() as DashboardLoaderData;
 
-  // Live Handler: Simulates server-side session termination
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      console.log("Live Event: Destroying authentication token session...");
-      // Optional: clear local tokens here
-      // localStorage.removeItem("token");
-      await new Promise((resolve) => setTimeout(resolve, 800)); 
+      localStorage.removeItem("auth_token");
+      await new Promise((resolve) => setTimeout(resolve, 800));
       navigate("/");
     } catch (err) {
       console.error("Logout failed", err);
