@@ -212,7 +212,7 @@ export default function ProfilePage() {
               <span>Cancel</span>
             </button>
             <button
-              onClick={handleSaveProfile}
+              onClick={() => handleSaveProfile()}
               disabled={saving}
               className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground text-xs uppercase tracking-widest font-bold rounded-sm hover:opacity-90 disabled:opacity-50 transition-opacity"
               style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
