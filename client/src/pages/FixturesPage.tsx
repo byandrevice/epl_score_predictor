@@ -26,6 +26,11 @@ interface Fixture {
   predictedHomeScore?: string | number;
   predictedAwayScore?: string | number;
   locked?: boolean;
+  // Final result — may be set via the app, Postman, a direct DB edit, or the
+  // football-data.org sync. Whenever these are non-null on the fixture doc,
+  // the UI should show the actual score instead of "VS".
+  finalHomeScore?: number | null;
+  finalAwayScore?: number | null;
 }
 
 // --- Date helpers for the Gameweek info strip + Deadline panel ---
@@ -382,6 +387,11 @@ function FixtureCard({ fixture, navigate, selectedYear }: { fixture: Fixture; na
           <span className="text-[10px] tracking-widest text-muted-foreground uppercase bg-muted/50 px-2 py-0.5 rounded-sm" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
             {fixture.week}
           </span>
+          {fixture.finalHomeScore != null && fixture.finalAwayScore != null && (
+            <span className="text-[10px] tracking-widest font-semibold text-foreground uppercase bg-foreground/10 border border-foreground/20 px-2 py-0.5 rounded-sm" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+              FT
+            </span>
+          )}
           {fixture.predicted && (
             <span className="text-[10px] tracking-widest text-primary uppercase bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-sm" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
               Predicted ✓ {fixture.predictedHomeScore !== undefined && `(${fixture.predictedHomeScore}-${fixture.predictedAwayScore})`}
@@ -397,11 +407,17 @@ function FixtureCard({ fixture, navigate, selectedYear }: { fixture: Fixture; na
           <TeamCrest shortName={fixture.homeShort} fallbackEmoji={fixture.homeCrest} name={fixture.home} />
         </div>
 
-        {/* Center VS Indicator */}
+        {/* Center VS Indicator / Final Score */}
         <div className="flex flex-col items-center gap-1 flex-shrink-0 px-2">
-          <span className="text-xl font-black text-muted-foreground/30 leading-none" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-            VS
-          </span>
+          {fixture.finalHomeScore != null && fixture.finalAwayScore != null ? (
+            <span className="text-2xl font-black text-foreground leading-none tabular-nums" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+              {fixture.finalHomeScore} – {fixture.finalAwayScore}
+            </span>
+          ) : (
+            <span className="text-xl font-black text-muted-foreground/30 leading-none" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+              VS
+            </span>
+          )}
           <div className="flex items-center gap-1 mt-0.5">
             <span className="text-[9px] tracking-widest text-muted-foreground/50 uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
               {fixture.homeShort}
