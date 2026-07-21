@@ -9,6 +9,8 @@ const {
   sendResetPasswordEmail
 } = require("../services/emailService");
 
+const CODE_EXPIRY_MS = 15 * 60 * 1000; // 15 minutes, for both email-verification and password-reset codes
+
 function signToken(user) { // Helper function, produces a login token for that user.
                            // When someone logs in successfully you call this function, and it hands back a long encoded string (the JWT).
   return jwt.sign(
@@ -56,6 +58,7 @@ exports.register = async (req, res, next) => {
       email: email.toLowerCase(),
       password,
       verificationCode,
+      verificationCodeExpires: new Date(Date.now() + CODE_EXPIRY_MS),
     });
 
     await user.save(); // Write the new user to the database. Before this line runs, user only exists in memory (in the server's code)
@@ -127,6 +130,13 @@ exports.verifyEmail = async (req, res) => {
       });
     }
 
+    if (!user.verificationCodeExpires || user.verificationCodeExpires < new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: "Verification code has expired. Please request a new one."
+      });
+    }
+
     if (user.verificationCode !== code) {
       return res.status(400).json({
         success: false,
@@ -136,6 +146,7 @@ exports.verifyEmail = async (req, res) => {
 
     user.isVerified = true;
     user.verificationCode = undefined;
+    user.verificationCodeExpires = undefined;
 
     await user.save();
 
@@ -171,6 +182,7 @@ exports.resendCode = async (req, res) => {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 
     user.verificationCode = code;
+    user.verificationCodeExpires = new Date(Date.now() + CODE_EXPIRY_MS);
 
     await user.save();
 
@@ -212,6 +224,7 @@ exports.forgotPassword = async (req, res) => {
     ).toString();
 
     user.verificationCode = resetCode;
+    user.verificationCodeExpires = new Date(Date.now() + CODE_EXPIRY_MS);
 
     await user.save();
 
@@ -248,6 +261,13 @@ exports.resetPassword = async (req, res) => {
       });
     }
 
+    if (!user.verificationCodeExpires || user.verificationCodeExpires < new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: "Reset code has expired. Please request a new one."
+      });
+    }
+
     if (user.verificationCode !== code) {
       return res.status(400).json({
         success: false,
@@ -257,6 +277,7 @@ exports.resetPassword = async (req, res) => {
 
     user.password = newPassword;
     user.verificationCode = undefined;
+    user.verificationCodeExpires = undefined;
 
     await user.save();
 

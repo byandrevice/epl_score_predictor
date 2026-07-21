@@ -11,6 +11,7 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true }, // store the hash, never plain text
     isVerified: { type: Boolean, default: false },
     verificationCode: { type: String },
+    verificationCodeExpires: { type: Date },
     favoriteTeam: { type: String, default: "" },
     emailNotifications: { type: Boolean, default: true },
     reminderNotifications: { type: Boolean, default: true },
