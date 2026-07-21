@@ -29,8 +29,6 @@ interface LeaderboardUser {
   predictionsPublic?: boolean;
 }
 
-type ScopeFilter = "Overall" | "GW38" | "Friends";
-
 const PAGE_SIZE = 25;
 
 function TrendIcon({ trend }: { trend: LeaderboardUser["trend"] }) {
@@ -68,7 +66,6 @@ function RankBadge({ rank }: { rank: number }) {
 export default function LeaderboardPage() {
   const navigate = useNavigate();
 
-  const [scope, setScope] = useState<ScopeFilter>("Overall");
   const [search, setSearch] = useState("");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
@@ -80,7 +77,7 @@ export default function LeaderboardPage() {
 
   const BACKEND_URL = (import.meta as any).env?.VITE_API_URL || "http://localhost:5001/api";
 
-  // --- 1. Fetch leaderboard for the selected scope ---
+  // --- 1. Fetch leaderboard ---
   useEffect(() => {
     async function fetchLeaderboard() {
       setLoading(true);
@@ -93,7 +90,7 @@ export default function LeaderboardPage() {
           return;
         }
 
-        const res = await fetch(`${BACKEND_URL}/leaderboard?scope=${scope}`, {
+        const res = await fetch(`${BACKEND_URL}/leaderboard`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -111,7 +108,7 @@ export default function LeaderboardPage() {
     }
 
     fetchLeaderboard();
-  }, [scope, navigate]);
+  }, [navigate]);
 
   // --- 2. Client-side name search ---
   const filtered = useMemo(() => {
@@ -164,22 +161,6 @@ export default function LeaderboardPage() {
           >
             Leaderboard
           </h1>
-        </div>
-
-        {/* Scope filter tabs */}
-        <div className="flex items-center gap-1.5">
-          {(["Overall", "GW38", "Friends"] as ScopeFilter[]).map((s) => (
-            <button
-              key={s}
-              onClick={() => setScope(s)}
-              className={`px-3 py-1.5 text-[10px] font-semibold tracking-widest uppercase rounded-sm transition-all ${
-                scope === s ? "bg-primary text-primary-foreground" : "bg-muted/40 text-muted-foreground border border-border"
-              }`}
-              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
-            >
-              {s}
-            </button>
-          ))}
         </div>
       </div>
 
