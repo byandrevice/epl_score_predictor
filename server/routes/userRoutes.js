@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require("../models/User");
 const Prediction = require("../models/Prediction");
 const authMiddleware = require("../middleware/auth");
+const { getRankedUsers, findRank } = require("../services/rankingService");
 
 const mongoose = require("mongoose");
 
@@ -91,13 +92,9 @@ router.get("/:userId/public", authMiddleware, async (req, res) => {
         const predictionsMade = userPredictions.length;
         const correctScores = userPredictions.filter((p) => p.isCorrect).length;
 
-        // Same ranking approach as /stats: rank by total points across all users.
-        const allTotals = await Prediction.aggregate([
-            { $group: { _id: "$user", totalPoints: { $sum: "$pointsAwarded" } } },
-            { $sort: { totalPoints: -1 } },
-        ]);
-        const rankIndex = allTotals.findIndex((p) => p._id.toString() === userId);
-        const rank = rankIndex !== -1 ? rankIndex + 1 : "Unranked";
+        // Same ranking source as the Leaderboard page — see rankingService.js.
+        const rankedUsers = await getRankedUsers();
+        const rank = findRank(rankedUsers, userId);
 
         const profile = {
             userId: user._id.toString(),
@@ -160,13 +157,9 @@ router.get("/stats", authMiddleware, async (req, res) => {
         // Cast ID to ObjectId for reliable database matching[cite: 3]
         const userId = new mongoose.Types.ObjectId(req.user.id); 
 
-        const allPredictions = await Prediction.aggregate([
-            { $group: { _id: "$user", totalPoints: { $sum: "$pointsAwarded" } } },
-            { $sort: { totalPoints: -1 } }
-        ]);
-
-        const rankIndex = allPredictions.findIndex(p => p._id.toString() === req.user.id);
-        const rank = rankIndex !== -1 ? rankIndex + 1 : "Unranked";
+        // Same ranking source as the Leaderboard page — see rankingService.js.
+        const rankedUsers = await getRankedUsers();
+        const rank = findRank(rankedUsers, req.user.id);
 
         const userPredictions = await Prediction.find({ user: userId }).sort({ createdAt: -1 });
         const totalPoints = userPredictions.reduce((sum, p) => sum + (p.pointsAwarded || 0), 0);
@@ -233,13 +226,10 @@ router.get("/dashboard-meta", authMiddleware, async (req, res) => {
             }
         }
 
-        // Same ranking logic already used by /stats, just reused here
-        const allPredictions = await Prediction.aggregate([
-            { $group: { _id: "$user", totalPoints: { $sum: "$pointsAwarded" } } },
-            { $sort: { totalPoints: -1 } }
-        ]);
-        const rankIndex = allPredictions.findIndex(p => p._id.toString() === userId);
-        const globalRank = rankIndex !== -1 ? `${rankIndex + 1}${ordinalSuffix(rankIndex + 1)}` : "Unranked";
+        // Same ranking source as the Leaderboard page — see rankingService.js.
+        const rankedUsers = await getRankedUsers();
+        const rank = findRank(rankedUsers, userId);
+        const globalRank = rank === "Unranked" ? "Unranked" : `${rank}${ordinalSuffix(rank)}`;
 
         const initials =
             ((user.firstName?.[0] || "") + (user.lastName?.[0] || "")).toUpperCase() ||
