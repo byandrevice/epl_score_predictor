@@ -13,7 +13,10 @@ router.get("/:id", fixtureController.getOne);
 router.get("/", authMiddleware, async (req, res) => {
     try {
         const { week, year } = req.query;
-        const query = { week };
+        const query = {};
+        if (week && week !== "All") {
+            query.week = week;
+        }
         if (year) {
             // "year" is the season's start year — "2025" means the 2025/26 season,
             // which runs Aug 2025 through Jul 2026.
