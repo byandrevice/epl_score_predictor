@@ -14,6 +14,7 @@ import {
   Crown,
   ChevronDown,
   Globe,
+  AlertTriangle,
 } from "lucide-react";
 
 // --- Types ---
@@ -103,7 +104,7 @@ export default function LeaderboardPage() {
         setUsers(data.users);
         setCurrentUser(data.currentUser ?? null);
       } catch (err: any) {
-
+        setError(err.message || "Failed to load the leaderboard.");
       } finally {
         setLoading(false);
       }
@@ -138,6 +139,15 @@ export default function LeaderboardPage() {
         >
           Loading Leaderboard...
         </span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3 text-destructive">
+        <AlertTriangle size={32} />
+        <span className="text-xs font-bold tracking-widest uppercase">{error}</span>
       </div>
     );
   }
